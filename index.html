@@ -1,16 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>MOGIBARAS-WEBSITE</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mogibara-AI</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <h1>Welcome to My WEBSITE</h1>
+<div id="authScreen">
+  <h1>🤖 Mogibara-AI</h1>
 
-  <p>This is my first WEBSITE.</p>
+  <div id="loginBox">
+    <h2>Login</h2>
+    <input id="loginEmail" type="email" placeholder="Email">
+    <input id="loginPassword" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p>Don't have an account?</p>
+    <button onclick="showRegister()">Create Account</button>
+  </div>
 
-  <button>Click here</button>
+  <div id="registerBox" style="display:none;">
+    <h2>Create Account</h2>
+
+    <input id="regName" placeholder="Name">
+    <input id="regAge" placeholder="Age">
+    <input id="regCity" placeholder="City">
+    <input id="regAnime" placeholder="Favorite Anime">
+
+    <input id="regEmail" type="email" placeholder="Email">
+    <input id="regPassword" type="password" placeholder="Password">
+
+    <button onclick="register()">Create Account</button>
+    <button onclick="showLogin()">Back to Login</button>
+  </div>
+</div>
+
+
+<div id="app" style="display:none;">
+
+  <header>
+    <h1>🤖 Mogibara-AI</h1>
+    <button onclick="logout()">Logout</button>
+  </header>
+
+  <main>
+
+    <section id="chat">
+
+      <div id="messages"></div>
+
+      <div class="inputArea">
+        <input id="messageInput"
+               placeholder="Talk to Mogibara-AI..."
+               onkeydown="handleEnter(event)">
+
+        <button onclick="sendMessage()">Send</button>
+      </div>
+
+    </section>
+
+    <section id="profilePanel">
+
+      <h2>👤 Profile</h2>
+
+      <div id="profileInfo"></div>
+
+      <button onclick="showProfile()">Refresh Profile</button>
+
+      <hr>
+
+      <h2>🎓 Teach AI</h2>
+
+      <input id="teachQuestion" placeholder="Question">
+
+      <textarea id="teachAnswer"
+                placeholder="Answer"></textarea>
+
+      <button onclick="teachAI()">Teach AI</button>
+
+      <hr>
+
+      <button onclick="openMaster()">👑 Master Control</button>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<div id="masterPanel" style="display:none;">
+
+  <div class="masterBox">
+
+    <h1>👑 Master Control</h1>
+
+    <button onclick="closeMaster()">Close</button>
+
+    <hr>
+
+    <button onclick="showUsers()">👤 Users</button>
+    <button onclick="showKnowledge()">🧠 AI Knowledge</button>
+    <button onclick="showTraining()">📚 Training Records</button>
+
+    <div id="masterContent"></div>
+
+  </div>
+
+</div>
+
+
+<script type="module" src="app.js"></script>
 
 </body>
 </html>
