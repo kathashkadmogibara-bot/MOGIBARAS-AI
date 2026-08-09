@@ -1,0 +1,131 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: white;
+}
+
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 7px 0;
+  border-radius: 8px;
+  border: none;
+}
+
+textarea {
+  min-height: 100px;
+}
+
+#authScreen {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 25px;
+  text-align: center;
+}
+
+#app header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: #222;
+}
+
+main {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+#chat {
+  flex: 2;
+  background: #1d1d1d;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+#profilePanel {
+  flex: 1;
+  background: #1d1d1d;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+#messages {
+  min-height: 400px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.message {
+  padding: 10px;
+  margin: 8px;
+  border-radius: 10px;
+  background: #292929;
+}
+
+.user {
+  text-align: right;
+}
+
+.bot {
+  text-align: left;
+}
+
+.inputArea {
+  display: flex;
+  gap: 5px;
+}
+
+.inputArea input {
+  flex: 1;
+}
+
+#masterPanel {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.9);
+  overflow-y: auto;
+}
+
+.masterBox {
+  max-width: 900px;
+  margin: 30px auto;
+  background: #181818;
+  padding: 25px;
+  border-radius: 15px;
+}
+
+.record {
+  background: #252525;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+}
+
+@media (max-width: 700px) {
+
+  main {
+    flex-direction: column;
+  }
+
+  #messages {
+    min-height: 300px;
+  }
+
+}
