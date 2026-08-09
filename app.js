@@ -19,67 +19,148 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  deleteDoc,
   query,
   orderBy
 } from
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
+/* =========================
+   FIREBASE
+========================= */
+
 const firebaseConfig = {
-  apiKey: "AIzaSyCRcdy0OcGMINNR35WX8-kvOjfP4LfqWzI",
-  authDomain: "mogibara-ai.firebaseapp.com",
-  projectId: "mogibara-ai",
-  storageBucket: "mogibara-ai.firebasestorage.app",
-  messagingSenderId: "940458573012",
-  appId: "1:940458573012:web:4c8b8e80bfab3cdd224f41",
-  measurementId: "G-ZVTHCPQMZJ"
+
+  apiKey:
+    "AIzaSyCRcdy0OcGMINNR35WX8-kvOjfP4LfqWzI",
+
+  authDomain:
+    "mogibara-ai.firebaseapp.com",
+
+  projectId:
+    "mogibara-ai",
+
+  storageBucket:
+    "mogibara-ai.firebasestorage.app",
+
+  messagingSenderId:
+    "940458573012",
+
+  appId:
+    "1:940458573012:web:4c8b8e80bfab3cdd224f41",
+
+  measurementId:
+    "G-ZVTHCPQMZJ"
 };
 
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const firebaseApp =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(firebaseApp);
+
+const db =
+  getFirestore(firebaseApp);
+
 
 let currentUser = null;
 
 
 /* =========================
-   AUTH
+   AUTH SCREEN
 ========================= */
 
 window.showRegister = function () {
 
-  document.getElementById("loginBox").style.display = "none";
-  document.getElementById("registerBox").style.display = "block";
+  document.getElementById("loginBox").hidden = true;
+  document.getElementById("registerBox").hidden = false;
+
+  clearAuthMessage();
 
 };
 
 
 window.showLogin = function () {
 
-  document.getElementById("loginBox").style.display = "block";
-  document.getElementById("registerBox").style.display = "none";
+  document.getElementById("loginBox").hidden = false;
+  document.getElementById("registerBox").hidden = true;
+
+  clearAuthMessage();
 
 };
 
 
+function authMessage(text) {
+
+  document.getElementById("authMessage")
+    .textContent = text;
+
+}
+
+
+function clearAuthMessage() {
+
+  authMessage("");
+
+}
+
+
+/* =========================
+   CREATE ACCOUNT
+========================= */
+
 window.register = async function () {
 
-  const name = document.getElementById("regName").value.trim();
-  const age = document.getElementById("regAge").value.trim();
-  const city = document.getElementById("regCity").value.trim();
-  const anime = document.getElementById("regAnime").value.trim();
+  const name =
+    document.getElementById("regName")
+      .value.trim();
 
-  const email = document.getElementById("regEmail").value.trim();
-  const password = document.getElementById("regPassword").value;
+  const age =
+    document.getElementById("regAge")
+      .value.trim();
+
+  const city =
+    document.getElementById("regCity")
+      .value.trim();
+
+  const anime =
+    document.getElementById("regAnime")
+      .value.trim();
+
+  const email =
+    document.getElementById("regEmail")
+      .value.trim();
+
+  const password =
+    document.getElementById("regPassword")
+      .value;
+
 
   if (!name || !email || !password) {
-    alert("Name, email and password are required.");
+
+    authMessage(
+      "Name, email and password are required."
+    );
+
     return;
   }
 
+
+  if (password.length < 6) {
+
+    authMessage(
+      "Password must be at least 6 characters."
+    );
+
+    return;
+  }
+
+
   try {
+
+    authMessage("Creating account...");
+
 
     const result =
       await createUserWithEmailAndPassword(
@@ -88,39 +169,77 @@ window.register = async function () {
         password
       );
 
+
     await setDoc(
       doc(db, "users", result.user.uid),
       {
+
         uid: result.user.uid,
+
         name: name,
+
         age: age,
+
         city: city,
+
         favoriteAnime: anime,
+
         email: email,
-        createdAt: new Date().toISOString()
+
+        createdAt:
+          new Date().toISOString()
+
       }
     );
 
-    alert("Account created!");
+
+    authMessage(
+      "Account created successfully!"
+    );
+
 
   } catch (error) {
 
-    alert(error.message);
+    console.error(error);
+
+    authMessage(
+      getFriendlyError(error)
+    );
 
   }
 
 };
 
 
+/* =========================
+   LOGIN
+========================= */
+
 window.login = async function () {
 
   const email =
-    document.getElementById("loginEmail").value.trim();
+    document.getElementById("loginEmail")
+      .value.trim();
 
   const password =
-    document.getElementById("loginPassword").value;
+    document.getElementById("loginPassword")
+      .value;
+
+
+  if (!email || !password) {
+
+    authMessage(
+      "Enter your email and password."
+    );
+
+    return;
+  }
+
 
   try {
+
+    authMessage("Logging in...");
+
 
     await signInWithEmailAndPassword(
       auth,
@@ -128,18 +247,35 @@ window.login = async function () {
       password
     );
 
+
   } catch (error) {
 
-    alert(error.message);
+    console.error(error);
+
+    authMessage(
+      getFriendlyError(error)
+    );
 
   }
 
 };
 
 
+/* =========================
+   LOGOUT
+========================= */
+
 window.logout = async function () {
 
-  await signOut(auth);
+  try {
+
+    await signOut(auth);
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
 
 };
 
@@ -148,32 +284,46 @@ window.logout = async function () {
    AUTH STATE
 ========================= */
 
-onAuthStateChanged(auth, async user => {
+onAuthStateChanged(
+  auth,
+  async user => {
 
-  if (user) {
+    if (user) {
 
-    currentUser = user;
+      currentUser = user;
 
-    document.getElementById("authScreen").style.display = "none";
-    document.getElementById("app").style.display = "block";
+      document.getElementById("authScreen")
+        .hidden = true;
 
-    await showProfile();
+      document.getElementById("app")
+        .hidden = false;
 
-    addMessage(
-      "bot",
-      "Hello! I am Mogibara-AI 🤖"
-    );
 
-  } else {
+      await showProfile();
 
-    currentUser = null;
+      addMessage(
+        "bot",
+        "Hello! I am Mogibara-AI 🤖"
+      );
 
-    document.getElementById("authScreen").style.display = "block";
-    document.getElementById("app").style.display = "none";
+
+    } else {
+
+      currentUser = null;
+
+      document.getElementById("authScreen")
+        .hidden = false;
+
+      document.getElementById("app")
+        .hidden = true;
+
+      document.getElementById("masterPanel")
+        .hidden = true;
+
+    }
 
   }
-
-});
+);
 
 
 /* =========================
@@ -184,35 +334,60 @@ window.showProfile = async function () {
 
   if (!currentUser) return;
 
-  const snap =
+
+  const snapshot =
     await getDoc(
-      doc(db, "users", currentUser.uid)
+      doc(
+        db,
+        "users",
+        currentUser.uid
+      )
     );
 
-  if (!snap.exists()) {
 
-    document.getElementById("profileInfo").innerHTML =
+  const box =
+    document.getElementById("profileInfo");
+
+
+  if (!snapshot.exists()) {
+
+    box.textContent =
       "Profile not found.";
 
     return;
-
   }
 
-  const p = snap.data();
 
-  document.getElementById("profileInfo").innerHTML = `
+  const p =
+    snapshot.data();
 
-    <p><b>Name:</b> ${escapeHTML(p.name || "")}</p>
 
-    <p><b>Age:</b> ${escapeHTML(p.age || "")}</p>
+  box.innerHTML = `
 
-    <p><b>City:</b> ${escapeHTML(p.city || "")}</p>
+    <p>
+      <b>Name:</b>
+      ${escapeHTML(p.name || "")}
+    </p>
 
-    <p><b>Favorite Anime:</b>
-    ${escapeHTML(p.favoriteAnime || "")}</p>
+    <p>
+      <b>Age:</b>
+      ${escapeHTML(p.age || "")}
+    </p>
 
-    <p><b>Email:</b>
-    ${escapeHTML(p.email || "")}</p>
+    <p>
+      <b>City:</b>
+      ${escapeHTML(p.city || "")}
+    </p>
+
+    <p>
+      <b>Favorite Anime:</b>
+      ${escapeHTML(p.favoriteAnime || "")}
+    </p>
+
+    <p>
+      <b>Email:</b>
+      ${escapeHTML(p.email || "")}
+    </p>
 
   `;
 
@@ -220,58 +395,109 @@ window.showProfile = async function () {
 
 
 /* =========================
-   AI KNOWLEDGE
+   FIND AI KNOWLEDGE
 ========================= */
 
 async function findKnowledge(question) {
 
-  const ref =
-    doc(db, "aiKnowledge", question);
+  const reference =
+    doc(
+      db,
+      "aiKnowledge",
+      encodeQuestion(question)
+    );
 
-  const snap = await getDoc(ref);
 
-  if (!snap.exists()) return null;
+  const snapshot =
+    await getDoc(reference);
 
-  return snap.data();
+
+  if (!snapshot.exists()) {
+
+    return null;
+
+  }
+
+
+  return snapshot.data();
 
 }
 
 
-async function saveKnowledge(question, answer) {
+/* =========================
+   SAVE AI KNOWLEDGE
+========================= */
 
-  const ref =
-    doc(db, "aiKnowledge", question);
+async function saveKnowledge(
+  question,
+  answer
+) {
 
-  const snap = await getDoc(ref);
+  const id =
+    encodeQuestion(question);
 
-  if (snap.exists()) {
 
-    const data = snap.data();
+  const reference =
+    doc(
+      db,
+      "aiKnowledge",
+      id
+    );
 
-    if (!data.answers.includes(answer)) {
 
-      data.answers.push(answer);
+  const snapshot =
+    await getDoc(reference);
 
-      await updateDoc(ref, {
-        answers: data.answers,
-        updatedAt: new Date().toISOString()
-      });
+
+  if (snapshot.exists()) {
+
+    const data =
+      snapshot.data();
+
+
+    const answers =
+      Array.isArray(data.answers)
+        ? data.answers
+        : [];
+
+
+    if (!answers.includes(answer)) {
+
+      answers.push(answer);
+
+
+      await updateDoc(
+        reference,
+        {
+
+          answers: answers,
+
+          updatedAt:
+            new Date().toISOString()
+
+        }
+      );
 
     }
 
+
   } else {
 
-    await setDoc(ref, {
+    await setDoc(
+      reference,
+      {
 
-      question: question,
+        question: question,
 
-      answers: [answer],
+        answers: [answer],
 
-      used: 0,
+        used: 0,
 
-      createdAt: new Date().toISOString()
+        createdAt:
+          new Date().toISOString()
 
-    });
+      }
+    );
 
   }
 
@@ -284,138 +510,303 @@ async function saveKnowledge(question, answer) {
 
 window.sendMessage = async function () {
 
+  if (!currentUser) return;
+
+
   const input =
-    document.getElementById("messageInput");
+    document.getElementById(
+      "messageInput"
+    );
+
 
   const question =
-    input.value.trim().toLowerCase();
+    input.value
+      .trim()
+      .toLowerCase();
+
 
   if (!question) return;
 
+
   input.value = "";
 
-  addMessage("user", question);
 
-  const data =
-    await findKnowledge(question);
+  addMessage(
+    "user",
+    question
+  );
 
-  if (!data) {
+
+  try {
+
+    const data =
+      await findKnowledge(question);
+
+
+    if (!data) {
+
+      const reply =
+        "I don't know that yet. You can teach me using the Teach AI section. 🧠";
+
+
+      addMessage(
+        "bot",
+        reply
+      );
+
+
+      await saveHistory(
+        question,
+        reply
+      );
+
+
+      return;
+    }
+
+
+    const answers =
+      Array.isArray(data.answers)
+        ? data.answers
+        : [];
+
+
+    if (answers.length === 0) {
+
+      addMessage(
+        "bot",
+        "I don't know the answer yet."
+      );
+
+      return;
+    }
+
+
+    let reply;
+
+
+    if (answers.length === 1) {
+
+      reply = answers[0];
+
+    } else {
+
+      const available =
+        answers.filter(
+          answer =>
+            answer !== data.last
+        );
+
+
+      const list =
+        available.length
+          ? available
+          : answers;
+
+
+      reply =
+        list[
+          Math.floor(
+            Math.random() * list.length
+          )
+        ];
+
+    }
+
+
+    await updateDoc(
+      doc(
+        db,
+        "aiKnowledge",
+        encodeQuestion(question)
+      ),
+      {
+
+        used:
+          (data.used || 0) + 1,
+
+        last:
+          reply
+
+      }
+    );
+
 
     addMessage(
       "bot",
-      "I don't know that yet. You can teach me below. 🧠"
+      reply
     );
+
 
     await saveHistory(
       question,
-      "I don't know that yet."
+      reply
     );
 
-    return;
 
-  }
+  } catch (error) {
 
-  if (!data.answers || data.answers.length === 0) {
+    console.error(error);
 
     addMessage(
       "bot",
-      "I don't know the answer yet."
+      "Something went wrong. Please try again."
     );
 
-    return;
-
   }
-
-  let answers = data.answers;
-
-  let reply =
-    answers[Math.floor(Math.random() * answers.length)];
-
-  await updateDoc(
-    doc(db, "aiKnowledge", question),
-    {
-      used: (data.used || 0) + 1
-    }
-  );
-
-  addMessage("bot", reply);
-
-  await saveHistory(question, reply);
 
 };
 
 
-window.handleEnter = function (event) {
+/* =========================
+   ENTER KEY
+========================= */
+
+window.handleEnter =
+function (event) {
 
   if (event.key === "Enter") {
+
     sendMessage();
+
   }
 
 };
 
 
-function addMessage(type, text) {
+/* =========================
+   DISPLAY MESSAGE
+========================= */
+
+function addMessage(
+  type,
+  text
+) {
 
   const box =
-    document.getElementById("messages");
+    document.getElementById(
+      "messages"
+    );
 
-  const div =
+
+  const message =
     document.createElement("div");
 
-  div.className =
+
+  message.className =
     "message " + type;
 
-  div.textContent =
-    (type === "user" ? "You: " : "Bot: ") + text;
 
-  box.appendChild(div);
+  message.textContent =
+    type === "user"
+      ? "You: " + text
+      : "Bot: " + text;
 
-  box.scrollTop = box.scrollHeight;
+
+  box.appendChild(message);
+
+
+  box.scrollTop =
+    box.scrollHeight;
 
 }
 
 
 /* =========================
-   TRAIN AI
+   TEACH AI
 ========================= */
 
 window.teachAI = async function () {
 
   if (!currentUser) return;
 
+
   const question =
-    document.getElementById("teachQuestion")
-      .value.trim().toLowerCase();
+    document.getElementById(
+      "teachQuestion"
+    )
+    .value
+    .trim()
+    .toLowerCase();
+
 
   const answer =
-    document.getElementById("teachAnswer")
-      .value.trim();
+    document.getElementById(
+      "teachAnswer"
+    )
+    .value
+    .trim();
+
 
   if (!question || !answer) {
 
-    alert("Enter question and answer.");
+    alert(
+      "Enter both question and answer."
+    );
 
     return;
-
   }
 
-  await saveKnowledge(question, answer);
 
-  await addDoc(
-    collection(db, "trainingRecords"),
-    {
-      userId: currentUser.uid,
-      userEmail: currentUser.email,
-      question: question,
-      answer: answer,
-      time: new Date().toISOString()
-    }
-  );
+  try {
 
-  document.getElementById("teachQuestion").value = "";
-  document.getElementById("teachAnswer").value = "";
+    await saveKnowledge(
+      question,
+      answer
+    );
 
-  alert("Mogibara-AI learned something new! 🧠");
+
+    await addDoc(
+      collection(
+        db,
+        "trainingRecords"
+      ),
+      {
+
+        userId:
+          currentUser.uid,
+
+        userEmail:
+          currentUser.email,
+
+        question:
+          question,
+
+        answer:
+          answer,
+
+        time:
+          new Date().toISOString()
+
+      }
+    );
+
+
+    document.getElementById(
+      "teachQuestion"
+    ).value = "";
+
+
+    document.getElementById(
+      "teachAnswer"
+    ).value = "";
+
+
+    alert(
+      "Mogibara-AI learned something new! 🧠"
+    );
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Training failed: " +
+      error.message
+    );
+
+  }
 
 };
 
@@ -424,17 +815,33 @@ window.teachAI = async function () {
    HISTORY
 ========================= */
 
-async function saveHistory(userMessage, botMessage) {
+async function saveHistory(
+  userMessage,
+  botMessage
+) {
 
   if (!currentUser) return;
 
+
   await addDoc(
-    collection(db, "history"),
+    collection(
+      db,
+      "history"
+    ),
     {
-      userId: currentUser.uid,
-      user: userMessage,
-      bot: botMessage,
-      time: new Date().toISOString()
+
+      userId:
+        currentUser.uid,
+
+      user:
+        userMessage,
+
+      bot:
+        botMessage,
+
+      time:
+        new Date().toISOString()
+
     }
   );
 
@@ -442,184 +849,424 @@ async function saveHistory(userMessage, botMessage) {
 
 
 /* =========================
-   MASTER CONTROL
+   MASTER
 ========================= */
 
-window.openMaster = function () {
+window.openMaster =
+function () {
 
-  document.getElementById("masterPanel")
-    .style.display = "block";
+  document.getElementById(
+    "masterPanel"
+  ).hidden = false;
 
 };
 
 
-window.closeMaster = function () {
+window.closeMaster =
+function () {
 
-  document.getElementById("masterPanel")
-    .style.display = "none";
+  document.getElementById(
+    "masterPanel"
+  ).hidden = true;
 
 };
 
 
 /*
-IMPORTANT:
-Master permissions should NOT be protected
-by a password inside JavaScript.
-
-Firebase Security Rules should decide
-who is actually an admin.
+   IMPORTANT:
+   Real admin protection is handled
+   by Firestore Security Rules.
 */
 
-
-window.showUsers = async function () {
+window.showUsers =
+async function () {
 
   const box =
-    document.getElementById("masterContent");
+    document.getElementById(
+      "masterContent"
+    );
 
-  box.innerHTML = "<h2>👤 Users</h2>";
+
+  box.innerHTML =
+    "<h2>👤 Users</h2>";
+
 
   const snapshot =
-    await getDocs(collection(db, "users"));
+    await getDocs(
+      collection(
+        db,
+        "users"
+      )
+    );
 
-  snapshot.forEach(docSnap => {
 
-    const p = docSnap.data();
+  snapshot.forEach(
+    userDoc => {
 
-    const div =
-      document.createElement("div");
+      const data =
+        userDoc.data();
 
-    div.className = "record";
 
-    div.innerHTML = `
+      const div =
+        document.createElement(
+          "div"
+        );
 
-      <b>Name:</b> ${escapeHTML(p.name || "")}<br>
-      <b>Email:</b> ${escapeHTML(p.email || "")}<br>
-      <b>City:</b> ${escapeHTML(p.city || "")}<br>
-      <b>Anime:</b>
-      ${escapeHTML(p.favoriteAnime || "")}<br>
-      <b>Created:</b>
-      ${escapeHTML(p.createdAt || "")}
 
-    `;
+      div.className =
+        "record";
 
-    box.appendChild(div);
 
-  });
+      div.innerHTML = `
+
+        <b>Name:</b>
+        ${escapeHTML(data.name || "")}
+
+        <br>
+
+        <b>Email:</b>
+        ${escapeHTML(data.email || "")}
+
+        <br>
+
+        <b>City:</b>
+        ${escapeHTML(data.city || "")}
+
+        <br>
+
+        <b>Anime:</b>
+        ${escapeHTML(
+          data.favoriteAnime || ""
+        )}
+
+      `;
+
+
+      box.appendChild(div);
+
+    }
+  );
 
 };
 
 
-window.showKnowledge = async function () {
+window.showKnowledge =
+async function () {
 
   const box =
-    document.getElementById("masterContent");
+    document.getElementById(
+      "masterContent"
+    );
 
-  box.innerHTML = "<h2>🧠 AI Knowledge</h2>";
+
+  box.innerHTML =
+    "<h2>🧠 AI Knowledge</h2>";
+
 
   const snapshot =
-    await getDocs(collection(db, "aiKnowledge"));
+    await getDocs(
+      collection(
+        db,
+        "aiKnowledge"
+      )
+    );
 
-  snapshot.forEach(docSnap => {
 
-    const data = docSnap.data();
+  snapshot.forEach(
+    knowledgeDoc => {
 
-    const div =
-      document.createElement("div");
+      const data =
+        knowledgeDoc.data();
 
-    div.className = "record";
 
-    div.innerHTML = `
+      const div =
+        document.createElement(
+          "div"
+        );
 
-      <b>Question:</b>
-      ${escapeHTML(data.question || "")}
 
-      <br><br>
+      div.className =
+        "record";
 
-      <b>Answers:</b>
 
-      <ul>
+      const answers =
+        Array.isArray(data.answers)
+          ? data.answers
+          : [];
 
-        ${(data.answers || [])
-          .map(a =>
-            `<li>${escapeHTML(a)}</li>`
-          )
-          .join("")}
 
-      </ul>
+      div.innerHTML = `
 
-      <b>Used:</b> ${data.used || 0}
+        <b>Question:</b>
+        ${escapeHTML(
+          data.question || ""
+        )}
 
-    `;
+        <br><br>
 
-    box.appendChild(div);
+        <b>Answers:</b>
 
-  });
+        <ul>
+
+          ${answers.map(
+            answer =>
+              `<li>${escapeHTML(answer)}</li>`
+          ).join("")}
+
+        </ul>
+
+        <b>Used:</b>
+        ${data.used || 0}
+
+      `;
+
+
+      box.appendChild(div);
+
+    }
+  );
 
 };
 
 
-window.showTraining = async function () {
+window.showTraining =
+async function () {
 
   const box =
-    document.getElementById("masterContent");
+    document.getElementById(
+      "masterContent"
+    );
+
 
   box.innerHTML =
     "<h2>📚 Training Records</h2>";
 
+
   const snapshot =
     await getDocs(
-      collection(db, "trainingRecords")
+      collection(
+        db,
+        "trainingRecords"
+      )
     );
 
-  snapshot.forEach(docSnap => {
 
-    const d = docSnap.data();
+  snapshot.forEach(
+    trainingDoc => {
 
-    const div =
-      document.createElement("div");
+      const data =
+        trainingDoc.data();
 
-    div.className = "record";
 
-    div.innerHTML = `
+      const div =
+        document.createElement(
+          "div"
+        );
 
-      <b>User:</b>
-      ${escapeHTML(d.userEmail || "")}
 
-      <br>
+      div.className =
+        "record";
 
-      <b>Question:</b>
-      ${escapeHTML(d.question || "")}
 
-      <br>
+      div.innerHTML = `
 
-      <b>Answer:</b>
-      ${escapeHTML(d.answer || "")}
+        <b>User:</b>
+        ${escapeHTML(
+          data.userEmail || ""
+        )}
 
-      <br>
+        <br>
 
-      <b>Time:</b>
-      ${escapeHTML(d.time || "")}
+        <b>Question:</b>
+        ${escapeHTML(
+          data.question || ""
+        )}
 
-    `;
+        <br>
 
-    box.appendChild(div);
+        <b>Answer:</b>
+        ${escapeHTML(
+          data.answer || ""
+        )}
 
-  });
+        <br>
+
+        <b>Time:</b>
+        ${escapeHTML(
+          data.time || ""
+        )}
+
+      `;
+
+
+      box.appendChild(div);
+
+    }
+  );
 
 };
 
 
 /* =========================
-   SECURITY HELPER
+   STATISTICS
 ========================= */
 
-function escapeHTML(text) {
+window.showStats =
+async function () {
+
+  const box =
+    document.getElementById(
+      "masterContent"
+    );
+
+
+  box.innerHTML =
+    "<h2>📊 Statistics</h2>";
+
+
+  const users =
+    await getDocs(
+      collection(
+        db,
+        "users"
+      )
+    );
+
+
+  const knowledge =
+    await getDocs(
+      collection(
+        db,
+        "aiKnowledge"
+      )
+    );
+
+
+  const training =
+    await getDocs(
+      collection(
+        db,
+        "trainingRecords"
+      )
+    );
+
+
+  let totalAnswers = 0;
+
+
+  knowledge.forEach(
+    item => {
+
+      const answers =
+        item.data().answers;
+
+
+      if (Array.isArray(answers)) {
+
+        totalAnswers +=
+          answers.length;
+
+      }
+
+    }
+  );
+
+
+  box.innerHTML = `
+
+    <h2>📊 Statistics</h2>
+
+    <div class="record">
+
+      <b>Users:</b>
+      ${users.size}
+
+      <br>
+
+      <b>Questions:</b>
+      ${knowledge.size}
+
+      <br>
+
+      <b>Answers:</b>
+      ${totalAnswers}
+
+      <br>
+
+      <b>Training Records:</b>
+      ${training.size}
+
+    </div>
+
+  `;
+
+};
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function encodeQuestion(
+  question
+) {
+
+  return btoa(
+    unescape(
+      encodeURIComponent(question)
+    )
+  )
+  .replaceAll("/", "_")
+  .replaceAll("+", "-")
+  .replaceAll("=", "");
+
+}
+
+
+function escapeHTML(
+  value
+) {
 
   const div =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
-  div.textContent = String(text);
+  div.textContent =
+    String(value);
+
 
   return div.innerHTML;
+
+}
+
+
+function getFriendlyError(
+  error
+) {
+
+  switch (
+    error.code
+  ) {
+
+    case "auth/email-already-in-use":
+      return "This email already has an account.";
+
+    case "auth/invalid-email":
+      return "Invalid email address.";
+
+    case "auth/invalid-credential":
+      return "Wrong email or password.";
+
+    case "auth/weak-password":
+      return "Password is too weak.";
+
+    case "auth/network-request-failed":
+      return "Internet connection problem.";
+
+    default:
+      return error.message || "Something went wrong.";
+
+  }
 
 }
