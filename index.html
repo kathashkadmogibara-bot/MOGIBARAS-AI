@@ -9,101 +9,183 @@
 
 <body>
 
+<!-- LOGIN / REGISTER -->
 <div id="authScreen">
-  <h1>🤖 Mogibara-AI</h1>
 
-  <div id="loginBox">
-    <h2>Login</h2>
-    <input id="loginEmail" type="email" placeholder="Email">
-    <input id="loginPassword" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <p>Don't have an account?</p>
-    <button onclick="showRegister()">Create Account</button>
+  <div class="auth-card">
+
+    <h1>🤖 Mogibara-AI</h1>
+    <p>Your online AI</p>
+
+    <div id="loginBox">
+
+      <h2>Login</h2>
+
+      <input id="loginEmail"
+             type="email"
+             placeholder="Email">
+
+      <input id="loginPassword"
+             type="password"
+             placeholder="Password">
+
+      <button onclick="login()">Login</button>
+
+      <button class="secondary"
+              onclick="showRegister()">
+        Create Account
+      </button>
+
+    </div>
+
+
+    <div id="registerBox" hidden>
+
+      <h2>Create Account</h2>
+
+      <input id="regName"
+             placeholder="Name">
+
+      <input id="regAge"
+             type="number"
+             placeholder="Age">
+
+      <input id="regCity"
+             placeholder="City">
+
+      <input id="regAnime"
+             placeholder="Favorite Anime">
+
+      <input id="regEmail"
+             type="email"
+             placeholder="Email">
+
+      <input id="regPassword"
+             type="password"
+             placeholder="Password">
+
+      <button onclick="register()">
+        Create Account
+      </button>
+
+      <button class="secondary"
+              onclick="showLogin()">
+        Back to Login
+      </button>
+
+    </div>
+
+    <p id="authMessage"></p>
+
   </div>
 
-  <div id="registerBox" style="display:none;">
-    <h2>Create Account</h2>
-
-    <input id="regName" placeholder="Name">
-    <input id="regAge" placeholder="Age">
-    <input id="regCity" placeholder="City">
-    <input id="regAnime" placeholder="Favorite Anime">
-
-    <input id="regEmail" type="email" placeholder="Email">
-    <input id="regPassword" type="password" placeholder="Password">
-
-    <button onclick="register()">Create Account</button>
-    <button onclick="showLogin()">Back to Login</button>
-  </div>
 </div>
 
 
-<div id="app" style="display:none;">
+<!-- MAIN APP -->
+<div id="app" hidden>
 
   <header>
+
     <h1>🤖 Mogibara-AI</h1>
-    <button onclick="logout()">Logout</button>
+
+    <div>
+      <button onclick="showProfile()">
+        👤 Profile
+      </button>
+
+      <button onclick="openMaster()">
+        👑 Master
+      </button>
+
+      <button onclick="logout()">
+        Logout
+      </button>
+    </div>
+
   </header>
+
 
   <main>
 
-    <section id="chat">
+    <!-- CHAT -->
+    <section class="chat-section">
 
       <div id="messages"></div>
 
-      <div class="inputArea">
+      <div class="chat-input">
+
         <input id="messageInput"
                placeholder="Talk to Mogibara-AI..."
                onkeydown="handleEnter(event)">
 
-        <button onclick="sendMessage()">Send</button>
+        <button onclick="sendMessage()">
+          Send
+        </button>
+
       </div>
 
     </section>
 
-    <section id="profilePanel">
+
+    <!-- SIDE PANEL -->
+    <aside>
 
       <h2>👤 Profile</h2>
 
-      <div id="profileInfo"></div>
-
-      <button onclick="showProfile()">Refresh Profile</button>
+      <div id="profileInfo">
+        Loading...
+      </div>
 
       <hr>
 
       <h2>🎓 Teach AI</h2>
 
-      <input id="teachQuestion" placeholder="Question">
+      <input id="teachQuestion"
+             placeholder="Question">
 
       <textarea id="teachAnswer"
                 placeholder="Answer"></textarea>
 
-      <button onclick="teachAI()">Teach AI</button>
+      <button onclick="teachAI()">
+        🧠 Teach Mogibara
+      </button>
 
-      <hr>
-
-      <button onclick="openMaster()">👑 Master Control</button>
-
-    </section>
+    </aside>
 
   </main>
 
 </div>
 
 
-<div id="masterPanel" style="display:none;">
+<!-- MASTER -->
+<div id="masterPanel" hidden>
 
-  <div class="masterBox">
+  <div class="master-card">
 
     <h1>👑 Master Control</h1>
 
-    <button onclick="closeMaster()">Close</button>
+    <button onclick="closeMaster()">
+      Close
+    </button>
 
     <hr>
 
-    <button onclick="showUsers()">👤 Users</button>
-    <button onclick="showKnowledge()">🧠 AI Knowledge</button>
-    <button onclick="showTraining()">📚 Training Records</button>
+    <button onclick="showUsers()">
+      👤 Users
+    </button>
+
+    <button onclick="showKnowledge()">
+      🧠 Knowledge
+    </button>
+
+    <button onclick="showTraining()">
+      📚 Training
+    </button>
+
+    <button onclick="showStats()">
+      📊 Statistics
+    </button>
 
     <div id="masterContent"></div>
 
