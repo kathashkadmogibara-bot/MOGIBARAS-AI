@@ -5,6 +5,8 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged
 } from
@@ -41,51 +43,41 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
+const googleProvider = new GoogleAuthProvider();
+
 let currentUser = null;
+let skippedUser = false;
 
 
 /* =========================
-   AUTH UI
+   AUTH SCREEN
 ========================= */
 
 window.showRegister = function () {
   document.getElementById("loginBox").hidden = true;
   document.getElementById("registerBox").hidden = false;
-  clearAuthMessage();
+  authMessage("");
 };
 
 window.showLogin = function () {
   document.getElementById("loginBox").hidden = false;
   document.getElementById("registerBox").hidden = true;
-  clearAuthMessage();
+  authMessage("");
 };
 
 function authMessage(text) {
   document.getElementById("authMessage").textContent = text;
 }
 
-function clearAuthMessage() {
-  authMessage("");
-}
-
 
 /* =========================
-   REGISTER
+   CREATE ACCOUNT
 ========================= */
 
 window.register = async function () {
 
-  const name =
-    document.getElementById("regName").value.trim();
-
-  const age =
-    document.getElementById("regAge").value.trim();
-
-  const city =
-    document.getElementById("regCity").value.trim();
-
-  const anime =
-    document.getElementById("regAnime").value.trim();
+  const username =
+    document.getElementById("regUsername").value.trim();
 
   const email =
     document.getElementById("regEmail").value.trim();
@@ -93,9 +85,21 @@ window.register = async function () {
   const password =
     document.getElementById("regPassword").value;
 
+  const age =
+    document.getElementById("regAge").value.trim();
 
-  if (!name || !email || !password) {
-    authMessage("Name, email and password are required.");
+  const city =
+    document.getElementById("regCity").value.trim();
+
+  const gender =
+    document.getElementById("regGender").value;
+
+  const anime =
+    document.getElementById("regAnime").value.trim();
+
+
+  if (!username || !email || !password) {
+    authMessage("Username, email and password are required.");
     return;
   }
 
@@ -121,11 +125,12 @@ window.register = async function () {
       doc(db, "users", result.user.uid),
       {
         uid: result.user.uid,
-        name: name,
+        username: username,
+        email: email,
         age: age,
         city: city,
+        gender: gender,
         favoriteAnime: anime,
-        email: email,
         createdAt: new Date().toISOString()
       }
     );
@@ -136,23 +141,23 @@ window.register = async function () {
 
   } catch (error) {
 
-    console.error("REGISTER ERROR:", error);
+    console.error(error);
 
     authMessage(
-      getFriendlyError(error)
+      friendlyError(error)
     );
   }
 };
 
 
 /* =========================
-   LOGIN
+   EMAIL LOGIN
 ========================= */
 
 window.login = async function () {
 
-  const email =
-    document.getElementById("loginEmail")
+  const loginValue =
+    document.getElementById("loginUsername")
       .value
       .trim();
 
@@ -161,48 +166,129 @@ window.login = async function () {
       .value;
 
 
-  if (!email || !password) {
-    authMessage("Enter your email and password.");
+  if (!loginValue || !password) {
+    authMessage("Enter username/email and password.");
     return;
   }
 
+
+  /*
+    Firebase Email/Password login uses email.
+
+    Username login will be connected to the
+    username -> email lookup after the basic
+    Firebase login is working.
+  */
 
   try {
 
     authMessage("Logging in...");
 
+    await signInWithEmailAndPassword(
+      auth,
+      loginValue,
+      password
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    authMessage(
+      friendlyError(error)
+    );
+  }
+};
+
+
+/* =========================
+   GOOGLE LOGIN
+========================= */
+
+window.googleLogin = async function () {
+
+  try {
+
+    authMessage("Opening Google login...");
 
     const result =
-      await signInWithEmailAndPassword(
+      await signInWithPopup(
         auth,
-        email,
-        password
+        googleProvider
       );
 
 
-    console.log(
-      "LOGIN SUCCESS:",
-      result.user.email,
-      result.user.uid
-    );
+    const userRef =
+      doc(
+        db,
+        "users",
+        result.user.uid
+      );
 
 
-    authMessage("Login successful!");
+    const profile =
+      await getDoc(userRef);
+
+
+    if (!profile.exists()) {
+
+      await setDoc(
+        userRef,
+        {
+          uid: result.user.uid,
+          username:
+            result.user.displayName ||
+            "Google User",
+          email:
+            result.user.email || "",
+          age: "",
+          city: "",
+          gender: "",
+          favoriteAnime: "",
+          provider: "google",
+          createdAt: new Date().toISOString()
+        }
+      );
+    }
 
 
   } catch (error) {
 
-    console.error(
-      "LOGIN ERROR:",
-      error.code,
-      error.message
-    );
-
+    console.error(error);
 
     authMessage(
-      getFriendlyError(error)
+      friendlyError(error)
     );
   }
+};
+
+
+/* =========================
+   SKIP LOGIN
+========================= */
+
+window.skipLogin = function () {
+
+  skippedUser = true;
+  currentUser = null;
+
+
+  document.getElementById("authScreen")
+    .hidden = true;
+
+  document.getElementById("app")
+    .hidden = false;
+
+
+  addMessage(
+    "bot",
+    "You are using Mogibara-AI as a guest. 👋"
+  );
+
+  addMessage(
+    "bot",
+    "Login anytime to save your profile and training."
+  );
 };
 
 
@@ -212,14 +298,23 @@ window.login = async function () {
 
 window.logout = async function () {
 
+  if (skippedUser) {
+
+    skippedUser = false;
+
+    location.reload();
+
+    return;
+  }
+
+
   try {
 
     await signOut(auth);
 
   } catch (error) {
 
-    console.error("LOGOUT ERROR:", error);
-
+    console.error(error);
   }
 };
 
@@ -232,15 +327,10 @@ onAuthStateChanged(
   auth,
   async user => {
 
-    console.log(
-      "AUTH STATE:",
-      user ? user.email : "Not logged in"
-    );
-
-
     if (user) {
 
       currentUser = user;
+      skippedUser = false;
 
 
       document.getElementById("authScreen")
@@ -263,23 +353,7 @@ onAuthStateChanged(
           "bot",
           "Hello! I am Mogibara-AI 🤖"
         );
-
       }
-
-
-    } else {
-
-      currentUser = null;
-
-
-      document.getElementById("authScreen")
-        .hidden = false;
-
-      document.getElementById("app")
-        .hidden = true;
-
-      document.getElementById("masterPanel")
-        .hidden = true;
 
     }
 
@@ -293,7 +367,13 @@ onAuthStateChanged(
 
 window.showProfile = async function () {
 
-  if (!currentUser) return;
+  if (!currentUser) {
+
+    document.getElementById("profileInfo")
+      .textContent = "Guest mode";
+
+    return;
+  }
 
 
   try {
@@ -314,116 +394,260 @@ window.showProfile = async function () {
 
     if (!snapshot.exists()) {
 
-      box.textContent =
-        "Profile not found.";
+      box.textContent = "Profile not found.";
 
       return;
     }
 
 
-    const p =
-      snapshot.data();
+    const p = snapshot.data();
 
 
     box.innerHTML = `
 
-      <p>
-        <b>Name:</b>
-        ${escapeHTML(p.name || "")}
-      </p>
+      <p><b>Username:</b>
+      ${escapeHTML(p.username || "")}</p>
 
-      <p>
-        <b>Age:</b>
-        ${escapeHTML(p.age || "")}
-      </p>
+      <p><b>Email:</b>
+      ${escapeHTML(p.email || "")}</p>
 
-      <p>
-        <b>City:</b>
-        ${escapeHTML(p.city || "")}
-      </p>
+      <p><b>Age:</b>
+      ${escapeHTML(p.age || "")}</p>
 
-      <p>
-        <b>Favorite Anime:</b>
-        ${escapeHTML(p.favoriteAnime || "")}
-      </p>
+      <p><b>City:</b>
+      ${escapeHTML(p.city || "")}</p>
 
-      <p>
-        <b>Email:</b>
-        ${escapeHTML(p.email || "")}
-      </p>
+      <p><b>Gender:</b>
+      ${escapeHTML(p.gender || "")}</p>
+
+      <p><b>Favorite Anime:</b>
+      ${escapeHTML(p.favoriteAnime || "")}</p>
 
     `;
 
-
   } catch (error) {
 
-    console.error(
-      "PROFILE ERROR:",
-      error
-    );
+    console.error(error);
 
-    document.getElementById(
-      "profileInfo"
-    ).textContent =
-      "Could not load profile.";
-
+    document.getElementById("profileInfo")
+      .textContent = "Could not load profile.";
   }
 };
 
 
 /* =========================
-   QUESTION ID
+   CHAT
 ========================= */
 
-function encodeQuestion(question) {
+window.sendMessage = async function () {
 
-  return btoa(
-    unescape(
-      encodeURIComponent(question)
-    )
-  )
-  .replaceAll("/", "_")
-  .replaceAll("+", "-")
-  .replaceAll("=", "");
+  const input =
+    document.getElementById("messageInput");
 
-}
+  const original =
+    input.value.trim();
 
 
-/* =========================
-   FIND KNOWLEDGE
-========================= */
+  if (!original) return;
 
-async function findKnowledge(question) {
 
-  const reference =
-    doc(
-      db,
-      "knowledge",
-      encodeQuestion(question)
+  input.value = "";
+
+
+  addMessage(
+    "user",
+    original
+  );
+
+
+  const command =
+    original.toLowerCase();
+
+
+  /* MASTER COMMAND */
+
+  if (command === "/master") {
+
+    if (!currentUser) {
+
+      addMessage(
+        "bot",
+        "Master access requires login. 🔐"
+      );
+
+      return;
+    }
+
+
+    addMessage(
+      "bot",
+      "Master Control authentication will be connected to your Firebase Master account. 🔐"
     );
 
-
-  const snapshot =
-    await getDoc(reference);
-
-
-  if (!snapshot.exists()) {
-    return null;
+    return;
   }
 
 
-  return snapshot.data();
+  /* MEMORY COMMAND */
+
+  if (command === "/memory") {
+
+    if (!currentUser) {
+
+      addMessage(
+        "bot",
+        "Memory access requires Master access. 🔐"
+      );
+
+      return;
+    }
+
+
+    addMessage(
+      "bot",
+      "Memory is protected. Use /master first. 🧠"
+    );
+
+    return;
+  }
+
+
+  /* NORMAL CHAT */
+
+  try {
+
+    const knowledge =
+      await findKnowledge(
+        command
+      );
+
+
+    if (!knowledge) {
+
+      const reply =
+        "I don't know that yet. You can teach me using the Teach AI section. 🧠";
+
+
+      addMessage(
+        "bot",
+        reply
+      );
+
+
+      if (currentUser) {
+
+        await saveHistory(
+          original,
+          reply
+        );
+      }
+
+
+      return;
+    }
+
+
+    const answers =
+      Array.isArray(knowledge.answers)
+        ? knowledge.answers
+        : [];
+
+
+    if (answers.length === 0) {
+
+      addMessage(
+        "bot",
+        "I don't know the answer yet."
+      );
+
+      return;
+    }
+
+
+    let reply =
+      answers[
+        Math.floor(
+          Math.random() * answers.length
+        )
+      ];
+
+
+    addMessage(
+      "bot",
+      reply
+    );
+
+
+    if (currentUser) {
+
+      await saveHistory(
+        original,
+        reply
+      );
+    }
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    addMessage(
+      "bot",
+      "Something went wrong."
+    );
+  }
+};
+
+
+/* =========================
+   ENTER
+========================= */
+
+window.handleEnter = function(event) {
+
+  if (event.key === "Enter") {
+    sendMessage();
+  }
+
+};
+
+
+/* =========================
+   ADD MESSAGE
+========================= */
+
+function addMessage(type, text) {
+
+  const box =
+    document.getElementById("messages");
+
+
+  const message =
+    document.createElement("div");
+
+
+  message.className =
+    "message " + type;
+
+
+  message.textContent =
+    type === "user"
+      ? "You: " + text
+      : "Bot: " + text;
+
+
+  box.appendChild(message);
+
+  box.scrollTop =
+    box.scrollHeight;
 }
 
 
 /* =========================
-   SAVE KNOWLEDGE
+   FIND MEMORY
 ========================= */
 
-async function saveKnowledge(
-  question,
-  answer
-) {
+async function findKnowledge(question) {
 
   const id =
     encodeQuestion(question);
@@ -441,260 +665,12 @@ async function saveKnowledge(
     await getDoc(reference);
 
 
-  if (snapshot.exists()) {
-
-    const data =
-      snapshot.data();
-
-
-    const answers =
-      Array.isArray(data.answers)
-        ? data.answers
-        : [];
-
-
-    if (!answers.includes(answer)) {
-
-      answers.push(answer);
-
-
-      await updateDoc(
-        reference,
-        {
-          answers: answers,
-          updatedAt: new Date().toISOString()
-        }
-      );
-
-    }
-
-
-  } else {
-
-    await setDoc(
-      reference,
-      {
-        question: question,
-        answers: [answer],
-        used: 0,
-        createdAt: new Date().toISOString()
-      }
-    );
-
-  }
-}
-
-
-/* =========================
-   SEND MESSAGE
-========================= */
-
-window.sendMessage = async function () {
-
-  if (!currentUser) {
-    authMessage("Please login first.");
-    return;
+  if (!snapshot.exists()) {
+    return null;
   }
 
 
-  const input =
-    document.getElementById(
-      "messageInput"
-    );
-
-
-  const originalQuestion =
-    input.value.trim();
-
-
-  if (!originalQuestion) return;
-
-
-  const question =
-    originalQuestion.toLowerCase();
-
-
-  input.value = "";
-
-
-  addMessage(
-    "user",
-    originalQuestion
-  );
-
-
-  try {
-
-    const data =
-      await findKnowledge(question);
-
-
-    if (!data) {
-
-      const reply =
-        "I don't know that yet. You can teach me using the Teach AI section. 🧠";
-
-
-      addMessage(
-        "bot",
-        reply
-      );
-
-
-      await saveHistory(
-        originalQuestion,
-        reply
-      );
-
-
-      return;
-    }
-
-
-    const answers =
-      Array.isArray(data.answers)
-        ? data.answers
-        : [];
-
-
-    if (answers.length === 0) {
-
-      addMessage(
-        "bot",
-        "I don't know the answer yet."
-      );
-
-      return;
-    }
-
-
-    let reply;
-
-
-    if (answers.length === 1) {
-
-      reply = answers[0];
-
-    } else {
-
-      const available =
-        answers.filter(
-          answer =>
-            answer !== data.last
-        );
-
-
-      const list =
-        available.length
-          ? available
-          : answers;
-
-
-      reply =
-        list[
-          Math.floor(
-            Math.random() * list.length
-          )
-        ];
-    }
-
-
-    await updateDoc(
-      doc(
-        db,
-        "knowledge",
-        encodeQuestion(question)
-      ),
-      {
-        used:
-          (data.used || 0) + 1,
-
-        last:
-          reply
-      }
-    );
-
-
-    addMessage(
-      "bot",
-      reply
-    );
-
-
-    await saveHistory(
-      originalQuestion,
-      reply
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "CHAT ERROR:",
-      error
-    );
-
-
-    addMessage(
-      "bot",
-      "Something went wrong. Please try again."
-    );
-
-  }
-};
-
-
-/* =========================
-   ENTER
-========================= */
-
-window.handleEnter =
-function (event) {
-
-  if (event.key === "Enter") {
-    sendMessage();
-  }
-
-};
-
-
-/* =========================
-   MESSAGE
-========================= */
-
-function addMessage(
-  type,
-  text
-) {
-
-  const box =
-    document.getElementById(
-      "messages"
-    );
-
-
-  const message =
-    document.createElement(
-      "div"
-    );
-
-
-  message.className =
-    "message " + type;
-
-
-  message.textContent =
-    type === "user"
-      ? "You: " + text
-      : "Bot: " + text;
-
-
-  box.appendChild(message);
-
-
-  box.scrollTop =
-    box.scrollHeight;
-
+  return snapshot.data();
 }
 
 
@@ -705,7 +681,11 @@ function addMessage(
 window.teachAI = async function () {
 
   if (!currentUser) {
-    alert("Please login first.");
+
+    alert(
+      "Please login to teach the AI."
+    );
+
     return;
   }
 
@@ -779,30 +759,89 @@ window.teachAI = async function () {
 
 
     alert(
-      "Mogibara-AI learned something new! 🧠"
+      "Mogibara-AI learned it! 🧠"
     );
 
 
   } catch (error) {
 
-    console.error(
-      "TEACH ERROR:",
-      error
-    );
-
+    console.error(error);
 
     alert(
       "Training failed: " +
       error.message
     );
-
   }
-
 };
 
 
 /* =========================
-   HISTORY
+   SAVE KNOWLEDGE
+========================= */
+
+async function saveKnowledge(
+  question,
+  answer
+) {
+
+  const reference =
+    doc(
+      db,
+      "knowledge",
+      encodeQuestion(question)
+    );
+
+
+  const snapshot =
+    await getDoc(reference);
+
+
+  if (snapshot.exists()) {
+
+    const data =
+      snapshot.data();
+
+
+    const answers =
+      Array.isArray(data.answers)
+        ? data.answers
+        : [];
+
+
+    if (!answers.includes(answer)) {
+
+      answers.push(answer);
+
+
+      await updateDoc(
+        reference,
+        {
+          answers: answers,
+          updatedAt:
+            new Date().toISOString()
+        }
+      );
+    }
+
+
+  } else {
+
+    await setDoc(
+      reference,
+      {
+        question: question,
+        answers: [answer],
+        used: 0,
+        createdAt:
+          new Date().toISOString()
+      }
+    );
+  }
+}
+
+
+/* =========================
+   SAVE HISTORY
 ========================= */
 
 async function saveHistory(
@@ -832,174 +871,23 @@ async function saveHistory(
         new Date().toISOString()
     }
   );
-
 }
 
 
 /* =========================
-   MASTER PANEL
+   ENCODE QUESTION
 ========================= */
 
-window.openMaster =
-function () {
+function encodeQuestion(question) {
 
-  document.getElementById(
-    "masterPanel"
-  ).hidden = false;
-
-};
-
-
-window.closeMaster =
-function () {
-
-  document.getElementById(
-    "masterPanel"
-  ).hidden = true;
-
-};
-
-
-/* =========================
-   MASTER MESSAGE
-========================= */
-
-window.showUsers =
-function () {
-
-  const box =
-    document.getElementById(
-      "masterContent"
-    );
-
-
-  box.innerHTML = `
-
-    <h2>👤 Users</h2>
-
-    <div class="record">
-      Firebase Security Rules currently
-      allow each user to access only their
-      own profile.
-    </div>
-
-  `;
-
-};
-
-
-window.showKnowledge =
-function () {
-
-  const box =
-    document.getElementById(
-      "masterContent"
-    );
-
-
-  box.innerHTML = `
-
-    <h2>🧠 Knowledge</h2>
-
-    <div class="record">
-      Knowledge is stored online in Firebase.
-    </div>
-
-  `;
-
-};
-
-
-window.showTraining =
-function () {
-
-  const box =
-    document.getElementById(
-      "masterContent"
-    );
-
-
-  box.innerHTML = `
-
-    <h2>📚 Training</h2>
-
-    <div class="record">
-      Training records are stored securely
-      for the logged-in user.
-    </div>
-
-  `;
-
-};
-
-
-window.showStats =
-function () {
-
-  const box =
-    document.getElementById(
-      "masterContent"
-    );
-
-
-  box.innerHTML = `
-
-    <h2>📊 Statistics</h2>
-
-    <div class="record">
-      Mogibara-AI is connected to Firebase.
-    </div>
-
-  `;
-
-};
-
-
-/* =========================
-   ERROR HANDLER
-========================= */
-
-function getFriendlyError(error) {
-
-  switch (error.code) {
-
-    case "auth/invalid-credential":
-      return "Email or password is incorrect.";
-
-    case "auth/invalid-login-credentials":
-      return "Email or password is incorrect.";
-
-    case "auth/user-not-found":
-      return "No account found with this email.";
-
-    case "auth/wrong-password":
-      return "Incorrect password.";
-
-    case "auth/invalid-email":
-      return "Invalid email address.";
-
-    case "auth/email-already-in-use":
-      return "This email already has an account.";
-
-    case "auth/weak-password":
-      return "Password must be at least 6 characters.";
-
-    case "auth/network-request-failed":
-      return "Internet connection problem.";
-
-    case "auth/too-many-requests":
-      return "Too many attempts. Try again later.";
-
-    case "auth/user-disabled":
-      return "This account has been disabled.";
-
-    case "auth/operation-not-allowed":
-      return "Email/Password login is not enabled in Firebase.";
-
-    default:
-      return error.message ||
-        "Something went wrong.";
-  }
+  return btoa(
+    unescape(
+      encodeURIComponent(question)
+    )
+  )
+  .replaceAll("/", "_")
+  .replaceAll("+", "-")
+  .replaceAll("=", "");
 }
 
 
@@ -1010,15 +898,58 @@ function getFriendlyError(error) {
 function escapeHTML(value) {
 
   const div =
-    document.createElement(
-      "div"
-    );
-
+    document.createElement("div");
 
   div.textContent =
     String(value);
 
-
   return div.innerHTML;
+}
 
+
+/* =========================
+   FIREBASE ERRORS
+========================= */
+
+function friendlyError(error) {
+
+  switch (error.code) {
+
+    case "auth/invalid-credential":
+      return "Wrong email or password.";
+
+    case "auth/invalid-login-credentials":
+      return "Wrong email or password.";
+
+    case "auth/user-not-found":
+      return "Account not found.";
+
+    case "auth/wrong-password":
+      return "Wrong password.";
+
+    case "auth/email-already-in-use":
+      return "This email already has an account.";
+
+    case "auth/invalid-email":
+      return "Invalid email.";
+
+    case "auth/weak-password":
+      return "Password must be at least 6 characters.";
+
+    case "auth/popup-closed-by-user":
+      return "Google login was cancelled.";
+
+    case "auth/popup-blocked":
+      return "Google login popup was blocked.";
+
+    case "auth/operation-not-allowed":
+      return "This login method is not enabled in Firebase.";
+
+    case "auth/network-request-failed":
+      return "Internet connection problem.";
+
+    default:
+      return error.message ||
+        "Something went wrong.";
   }
+}
