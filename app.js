@@ -54,18 +54,27 @@ let skippedUser = false;
 ========================= */
 
 window.showRegister = function () {
+
   document.getElementById("loginBox").hidden = true;
+
   document.getElementById("registerBox").hidden = false;
+
   authMessage("");
 };
+
 
 window.showLogin = function () {
+
   document.getElementById("loginBox").hidden = false;
+
   document.getElementById("registerBox").hidden = true;
+
   authMessage("");
 };
 
+
 function authMessage(text) {
+
   document.getElementById("authMessage").textContent = text;
 }
 
@@ -99,12 +108,21 @@ window.register = async function () {
 
 
   if (!username || !email || !password) {
-    authMessage("Username, email and password are required.");
+
+    authMessage(
+      "Username, email and password are required."
+    );
+
     return;
   }
 
+
   if (password.length < 6) {
-    authMessage("Password must be at least 6 characters.");
+
+    authMessage(
+      "Password must be at least 6 characters."
+    );
+
     return;
   }
 
@@ -112,6 +130,7 @@ window.register = async function () {
   try {
 
     authMessage("Creating account...");
+
 
     const result =
       await createUserWithEmailAndPassword(
@@ -122,7 +141,11 @@ window.register = async function () {
 
 
     await setDoc(
-      doc(db, "users", result.user.uid),
+      doc(
+        db,
+        "users",
+        result.user.uid
+      ),
       {
         uid: result.user.uid,
         username: username,
@@ -136,7 +159,9 @@ window.register = async function () {
     );
 
 
-    authMessage("Account created successfully!");
+    authMessage(
+      "Account created successfully!"
+    );
 
 
   } catch (error) {
@@ -167,28 +192,26 @@ window.login = async function () {
 
 
   if (!loginValue || !password) {
-    authMessage("Enter username/email and password.");
+
+    authMessage(
+      "Enter username/email and password."
+    );
+
     return;
   }
 
 
-  /*
-    Firebase Email/Password login uses email.
-
-    Username login will be connected to the
-    username -> email lookup after the basic
-    Firebase login is working.
-  */
-
   try {
 
     authMessage("Logging in...");
+
 
     await signInWithEmailAndPassword(
       auth,
       loginValue,
       password
     );
+
 
   } catch (error) {
 
@@ -209,7 +232,10 @@ window.googleLogin = async function () {
 
   try {
 
-    authMessage("Opening Google login...");
+    authMessage(
+      "Opening Google login..."
+    );
+
 
     const result =
       await signInWithPopup(
@@ -236,17 +262,26 @@ window.googleLogin = async function () {
         userRef,
         {
           uid: result.user.uid,
+
           username:
             result.user.displayName ||
             "Google User",
+
           email:
             result.user.email || "",
+
           age: "",
+
           city: "",
+
           gender: "",
+
           favoriteAnime: "",
+
           provider: "google",
-          createdAt: new Date().toISOString()
+
+          createdAt:
+            new Date().toISOString()
         }
       );
     }
@@ -270,6 +305,7 @@ window.googleLogin = async function () {
 window.skipLogin = function () {
 
   skippedUser = true;
+
   currentUser = null;
 
 
@@ -285,6 +321,7 @@ window.skipLogin = function () {
     "You are using Mogibara-AI as a guest. 👋"
   );
 
+
   addMessage(
     "bot",
     "Login anytime to save your profile and training."
@@ -298,23 +335,43 @@ window.skipLogin = function () {
 
 window.logout = async function () {
 
-  if (skippedUser) {
-
-    skippedUser = false;
-
-    location.reload();
-
-    return;
-  }
-
-
   try {
 
+    if (skippedUser) {
+
+      skippedUser = false;
+
+      currentUser = null;
+
+      document.getElementById("authScreen")
+        .hidden = false;
+
+      document.getElementById("app")
+        .hidden = true;
+
+      document.getElementById("loginBox")
+        .hidden = false;
+
+      document.getElementById("registerBox")
+        .hidden = true;
+
+      authMessage("");
+
+      return;
+    }
+
+
     await signOut(auth);
+
 
   } catch (error) {
 
     console.error(error);
+
+    authMessage(
+      "Logout failed: " +
+      error.message
+    );
   }
 };
 
@@ -330,6 +387,7 @@ onAuthStateChanged(
     if (user) {
 
       currentUser = user;
+
       skippedUser = false;
 
 
@@ -355,6 +413,27 @@ onAuthStateChanged(
         );
       }
 
+
+    } else {
+
+      currentUser = null;
+
+
+      document.getElementById("authScreen")
+        .hidden = false;
+
+      document.getElementById("app")
+        .hidden = true;
+
+
+      document.getElementById("loginBox")
+        .hidden = false;
+
+      document.getElementById("registerBox")
+        .hidden = true;
+
+
+      authMessage("");
     }
 
   }
@@ -389,18 +468,22 @@ window.showProfile = async function () {
 
 
     const box =
-      document.getElementById("profileInfo");
+      document.getElementById(
+        "profileInfo"
+      );
 
 
     if (!snapshot.exists()) {
 
-      box.textContent = "Profile not found.";
+      box.textContent =
+        "Profile not found.";
 
       return;
     }
 
 
-    const p = snapshot.data();
+    const p =
+      snapshot.data();
 
 
     box.innerHTML = `
@@ -425,12 +508,15 @@ window.showProfile = async function () {
 
     `;
 
+
   } catch (error) {
 
     console.error(error);
 
-    document.getElementById("profileInfo")
-      .textContent = "Could not load profile.";
+    document.getElementById(
+      "profileInfo"
+    ).textContent =
+      "Could not load profile.";
   }
 };
 
@@ -442,7 +528,10 @@ window.showProfile = async function () {
 window.sendMessage = async function () {
 
   const input =
-    document.getElementById("messageInput");
+    document.getElementById(
+      "messageInput"
+    );
+
 
   const original =
     input.value.trim();
@@ -548,7 +637,9 @@ window.sendMessage = async function () {
 
 
     const answers =
-      Array.isArray(knowledge.answers)
+      Array.isArray(
+        knowledge.answers
+      )
         ? knowledge.answers
         : [];
 
@@ -567,7 +658,8 @@ window.sendMessage = async function () {
     let reply =
       answers[
         Math.floor(
-          Math.random() * answers.length
+          Math.random() *
+          answers.length
         )
       ];
 
@@ -603,10 +695,13 @@ window.sendMessage = async function () {
    ENTER
 ========================= */
 
-window.handleEnter = function(event) {
+window.handleEnter =
+function(event) {
 
   if (event.key === "Enter") {
+
     sendMessage();
+
   }
 
 };
@@ -616,14 +711,21 @@ window.handleEnter = function(event) {
    ADD MESSAGE
 ========================= */
 
-function addMessage(type, text) {
+function addMessage(
+  type,
+  text
+) {
 
   const box =
-    document.getElementById("messages");
+    document.getElementById(
+      "messages"
+    );
 
 
   const message =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   message.className =
@@ -636,7 +738,10 @@ function addMessage(type, text) {
       : "Bot: " + text;
 
 
-  box.appendChild(message);
+  box.appendChild(
+    message
+  );
+
 
   box.scrollTop =
     box.scrollHeight;
@@ -647,10 +752,14 @@ function addMessage(type, text) {
    FIND MEMORY
 ========================= */
 
-async function findKnowledge(question) {
+async function findKnowledge(
+  question
+) {
 
   const id =
-    encodeQuestion(question);
+    encodeQuestion(
+      question
+    );
 
 
   const reference =
@@ -662,10 +771,13 @@ async function findKnowledge(question) {
 
 
   const snapshot =
-    await getDoc(reference);
+    await getDoc(
+      reference
+    );
 
 
   if (!snapshot.exists()) {
+
     return null;
   }
 
@@ -678,7 +790,8 @@ async function findKnowledge(question) {
    TEACH AI
 ========================= */
 
-window.teachAI = async function () {
+window.teachAI =
+async function () {
 
   if (!currentUser) {
 
@@ -753,6 +866,7 @@ window.teachAI = async function () {
       "teachQuestion"
     ).value = "";
 
+
     document.getElementById(
       "teachAnswer"
     ).value = "";
@@ -788,12 +902,16 @@ async function saveKnowledge(
     doc(
       db,
       "knowledge",
-      encodeQuestion(question)
+      encodeQuestion(
+        question
+      )
     );
 
 
   const snapshot =
-    await getDoc(reference);
+    await getDoc(
+      reference
+    );
 
 
   if (snapshot.exists()) {
@@ -803,7 +921,9 @@ async function saveKnowledge(
 
 
     const answers =
-      Array.isArray(data.answers)
+      Array.isArray(
+        data.answers
+      )
         ? data.answers
         : [];
 
@@ -816,7 +936,9 @@ async function saveKnowledge(
       await updateDoc(
         reference,
         {
-          answers: answers,
+          answers:
+            answers,
+
           updatedAt:
             new Date().toISOString()
         }
@@ -829,9 +951,15 @@ async function saveKnowledge(
     await setDoc(
       reference,
       {
-        question: question,
-        answers: [answer],
-        used: 0,
+        question:
+          question,
+
+        answers:
+          [answer],
+
+        used:
+          0,
+
         createdAt:
           new Date().toISOString()
       }
@@ -878,16 +1006,29 @@ async function saveHistory(
    ENCODE QUESTION
 ========================= */
 
-function encodeQuestion(question) {
+function encodeQuestion(
+  question
+) {
 
   return btoa(
     unescape(
-      encodeURIComponent(question)
+      encodeURIComponent(
+        question
+      )
     )
   )
-  .replaceAll("/", "_")
-  .replaceAll("+", "-")
-  .replaceAll("=", "");
+  .replaceAll(
+    "/",
+    "_"
+  )
+  .replaceAll(
+    "+",
+    "-"
+  )
+  .replaceAll(
+    "=",
+    ""
+  );
 }
 
 
@@ -895,13 +1036,19 @@ function encodeQuestion(question) {
    HTML SECURITY
 ========================= */
 
-function escapeHTML(value) {
+function escapeHTML(
+  value
+) {
 
   const div =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
+
 
   div.textContent =
     String(value);
+
 
   return div.innerHTML;
 }
@@ -911,7 +1058,9 @@ function escapeHTML(value) {
    FIREBASE ERRORS
 ========================= */
 
-function friendlyError(error) {
+function friendlyError(
+  error
+) {
 
   switch (error.code) {
 
@@ -952,4 +1101,4 @@ function friendlyError(error) {
       return error.message ||
         "Something went wrong.";
   }
-}
+    }
