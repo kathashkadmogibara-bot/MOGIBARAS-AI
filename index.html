@@ -9,7 +9,8 @@
 
 <body>
 
-<!-- LOGIN / REGISTER -->
+<!-- ================= AUTH ================= -->
+
 <div id="authScreen">
 
   <div class="auth-card">
@@ -17,60 +18,120 @@
     <h1>🤖 Mogibara-AI</h1>
     <p>Your online AI</p>
 
+    <!-- LOGIN -->
+
     <div id="loginBox">
 
       <h2>Login</h2>
 
-      <input id="loginEmail"
-             type="email"
-             placeholder="Email">
+      <input
+        id="loginUsername"
+        type="text"
+        placeholder="Username or Email"
+      >
 
-      <input id="loginPassword"
-             type="password"
-             placeholder="Password">
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Password"
+      >
 
-      <button onclick="login()">Login</button>
+      <button onclick="login()">
+        🔐 Login
+      </button>
 
-      <button class="secondary"
-              onclick="showRegister()">
-        Create Account
+      <button
+        class="google-btn"
+        onclick="googleLogin()"
+      >
+        🔵 Continue with Google
+      </button>
+
+      <button
+        class="secondary"
+        onclick="showRegister()"
+      >
+        🆕 Create Account
+      </button>
+
+      <button
+        class="secondary"
+        onclick="skipLogin()"
+      >
+        ⏭️ Skip for now
       </button>
 
     </div>
 
 
+    <!-- REGISTER -->
+
     <div id="registerBox" hidden>
 
       <h2>Create Account</h2>
 
-      <input id="regName"
-             placeholder="Name">
+      <input
+        id="regUsername"
+        type="text"
+        placeholder="Username"
+      >
 
-      <input id="regAge"
-             type="number"
-             placeholder="Age">
+      <input
+        id="regEmail"
+        type="email"
+        placeholder="Email"
+      >
 
-      <input id="regCity"
-             placeholder="City">
+      <input
+        id="regPassword"
+        type="password"
+        placeholder="Password"
+      >
 
-      <input id="regAnime"
-             placeholder="Favorite Anime">
+      <input
+        id="regAge"
+        type="number"
+        placeholder="Age"
+      >
 
-      <input id="regEmail"
-             type="email"
-             placeholder="Email">
+      <input
+        id="regCity"
+        type="text"
+        placeholder="City"
+      >
 
-      <input id="regPassword"
-             type="password"
-             placeholder="Password">
+      <select id="regGender">
+        <option value="">Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+        <option value="Prefer not to say">
+          Prefer not to say
+        </option>
+      </select>
+
+      <input
+        id="regAnime"
+        type="text"
+        placeholder="Favorite Anime"
+      >
 
       <button onclick="register()">
-        Create Account
+        🆕 Create Account
       </button>
 
-      <button class="secondary"
-              onclick="showLogin()">
-        Back to Login
+      <button
+        class="google-btn"
+        onclick="googleLogin()"
+      >
+        🔵 Sign up with Google
+      </button>
+
+      <button
+        class="secondary"
+        onclick="showLogin()"
+      >
+        ← Back to Login
       </button>
 
     </div>
@@ -82,26 +143,17 @@
 </div>
 
 
-<!-- MAIN APP -->
+<!-- ================= MAIN APP ================= -->
+
 <div id="app" hidden>
 
   <header>
 
     <h1>🤖 Mogibara-AI</h1>
 
-    <div>
-      <button onclick="showProfile()">
-        👤 Profile
-      </button>
-
-      <button onclick="openMaster()">
-        👑 Master
-      </button>
-
-      <button onclick="logout()">
-        Logout
-      </button>
-    </div>
+    <button onclick="logout()">
+      Logout
+    </button>
 
   </header>
 
@@ -109,15 +161,18 @@
   <main>
 
     <!-- CHAT -->
+
     <section class="chat-section">
 
       <div id="messages"></div>
 
       <div class="chat-input">
 
-        <input id="messageInput"
-               placeholder="Talk to Mogibara-AI..."
-               onkeydown="handleEnter(event)">
+        <input
+          id="messageInput"
+          placeholder="Talk to Mogibara-AI..."
+          onkeydown="handleEnter(event)"
+        >
 
         <button onclick="sendMessage()">
           Send
@@ -128,7 +183,8 @@
     </section>
 
 
-    <!-- SIDE PANEL -->
+    <!-- PROFILE -->
+
     <aside>
 
       <h2>👤 Profile</h2>
@@ -141,11 +197,15 @@
 
       <h2>🎓 Teach AI</h2>
 
-      <input id="teachQuestion"
-             placeholder="Question">
+      <input
+        id="teachQuestion"
+        placeholder="Question"
+      >
 
-      <textarea id="teachAnswer"
-                placeholder="Answer"></textarea>
+      <textarea
+        id="teachAnswer"
+        placeholder="Answer"
+      ></textarea>
 
       <button onclick="teachAI()">
         🧠 Teach Mogibara
@@ -154,42 +214,6 @@
     </aside>
 
   </main>
-
-</div>
-
-
-<!-- MASTER -->
-<div id="masterPanel" hidden>
-
-  <div class="master-card">
-
-    <h1>👑 Master Control</h1>
-
-    <button onclick="closeMaster()">
-      Close
-    </button>
-
-    <hr>
-
-    <button onclick="showUsers()">
-      👤 Users
-    </button>
-
-    <button onclick="showKnowledge()">
-      🧠 Knowledge
-    </button>
-
-    <button onclick="showTraining()">
-      📚 Training
-    </button>
-
-    <button onclick="showStats()">
-      📊 Statistics
-    </button>
-
-    <div id="masterContent"></div>
-
-  </div>
 
 </div>
 
