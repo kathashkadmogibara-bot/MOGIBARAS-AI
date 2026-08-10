@@ -16,11 +16,8 @@ import {
   doc,
   setDoc,
   getDoc,
-  getDocs,
   addDoc,
-  updateDoc,
-  query,
-  orderBy
+  updateDoc
 } from
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
@@ -30,129 +27,80 @@ import {
 ========================= */
 
 const firebaseConfig = {
-
-  apiKey:
-    "AIzaSyCRcdy0OcGMINNR35WX8-kvOjfP4LfqWzI",
-
-  authDomain:
-    "mogibara-ai.firebaseapp.com",
-
-  projectId:
-    "mogibara-ai",
-
-  storageBucket:
-    "mogibara-ai.firebasestorage.app",
-
-  messagingSenderId:
-    "940458573012",
-
-  appId:
-    "1:940458573012:web:4c8b8e80bfab3cdd224f41",
-
-  measurementId:
-    "G-ZVTHCPQMZJ"
+  apiKey: "AIzaSyCRcdy0OcGMINNR35WX8-kvOjfP4LfqWzI",
+  authDomain: "mogibara-ai.firebaseapp.com",
+  projectId: "mogibara-ai",
+  storageBucket: "mogibara-ai.firebasestorage.app",
+  messagingSenderId: "940458573012",
+  appId: "1:940458573012:web:4c8b8e80bfab3cdd224f41",
+  measurementId: "G-ZVTHCPQMZJ"
 };
 
+const firebaseApp = initializeApp(firebaseConfig);
 
-const firebaseApp =
-  initializeApp(firebaseConfig);
-
-const auth =
-  getAuth(firebaseApp);
-
-const db =
-  getFirestore(firebaseApp);
-
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
 
 let currentUser = null;
 
 
 /* =========================
-   AUTH SCREEN
+   AUTH UI
 ========================= */
 
 window.showRegister = function () {
-
   document.getElementById("loginBox").hidden = true;
   document.getElementById("registerBox").hidden = false;
-
   clearAuthMessage();
-
 };
-
 
 window.showLogin = function () {
-
   document.getElementById("loginBox").hidden = false;
   document.getElementById("registerBox").hidden = true;
-
   clearAuthMessage();
-
 };
 
-
 function authMessage(text) {
-
-  document.getElementById("authMessage")
-    .textContent = text;
-
+  document.getElementById("authMessage").textContent = text;
 }
 
-
 function clearAuthMessage() {
-
   authMessage("");
-
 }
 
 
 /* =========================
-   CREATE ACCOUNT
+   REGISTER
 ========================= */
 
 window.register = async function () {
 
   const name =
-    document.getElementById("regName")
-      .value.trim();
+    document.getElementById("regName").value.trim();
 
   const age =
-    document.getElementById("regAge")
-      .value.trim();
+    document.getElementById("regAge").value.trim();
 
   const city =
-    document.getElementById("regCity")
-      .value.trim();
+    document.getElementById("regCity").value.trim();
 
   const anime =
-    document.getElementById("regAnime")
-      .value.trim();
+    document.getElementById("regAnime").value.trim();
 
   const email =
-    document.getElementById("regEmail")
-      .value.trim();
+    document.getElementById("regEmail").value.trim();
 
   const password =
-    document.getElementById("regPassword")
-      .value;
+    document.getElementById("regPassword").value;
 
 
   if (!name || !email || !password) {
-
-    authMessage(
-      "Name, email and password are required."
-    );
-
+    authMessage("Name, email and password are required.");
     return;
   }
 
-
   if (password.length < 6) {
-
-    authMessage(
-      "Password must be at least 6 characters."
-    );
-
+    authMessage("Password must be at least 6 characters.");
     return;
   }
 
@@ -160,7 +108,6 @@ window.register = async function () {
   try {
 
     authMessage("Creating account...");
-
 
     const result =
       await createUserWithEmailAndPassword(
@@ -173,41 +120,28 @@ window.register = async function () {
     await setDoc(
       doc(db, "users", result.user.uid),
       {
-
         uid: result.user.uid,
-
         name: name,
-
         age: age,
-
         city: city,
-
         favoriteAnime: anime,
-
         email: email,
-
-        createdAt:
-          new Date().toISOString()
-
+        createdAt: new Date().toISOString()
       }
     );
 
 
-    authMessage(
-      "Account created successfully!"
-    );
+    authMessage("Account created successfully!");
 
 
   } catch (error) {
 
-    console.error(error);
+    console.error("REGISTER ERROR:", error);
 
     authMessage(
       getFriendlyError(error)
     );
-
   }
-
 };
 
 
@@ -219,7 +153,8 @@ window.login = async function () {
 
   const email =
     document.getElementById("loginEmail")
-      .value.trim();
+      .value
+      .trim();
 
   const password =
     document.getElementById("loginPassword")
@@ -227,11 +162,7 @@ window.login = async function () {
 
 
   if (!email || !password) {
-
-    authMessage(
-      "Enter your email and password."
-    );
-
+    authMessage("Enter your email and password.");
     return;
   }
 
@@ -241,23 +172,37 @@ window.login = async function () {
     authMessage("Logging in...");
 
 
-    await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
+    const result =
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+
+    console.log(
+      "LOGIN SUCCESS:",
+      result.user.email,
+      result.user.uid
     );
+
+
+    authMessage("Login successful!");
 
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "LOGIN ERROR:",
+      error.code,
+      error.message
+    );
+
 
     authMessage(
       getFriendlyError(error)
     );
-
   }
-
 };
 
 
@@ -273,10 +218,9 @@ window.logout = async function () {
 
   } catch (error) {
 
-    console.error(error);
+    console.error("LOGOUT ERROR:", error);
 
   }
-
 };
 
 
@@ -288,9 +232,16 @@ onAuthStateChanged(
   auth,
   async user => {
 
+    console.log(
+      "AUTH STATE:",
+      user ? user.email : "Not logged in"
+    );
+
+
     if (user) {
 
       currentUser = user;
+
 
       document.getElementById("authScreen")
         .hidden = true;
@@ -301,15 +252,25 @@ onAuthStateChanged(
 
       await showProfile();
 
-      addMessage(
-        "bot",
-        "Hello! I am Mogibara-AI 🤖"
-      );
+
+      const messages =
+        document.getElementById("messages");
+
+
+      if (messages.children.length === 0) {
+
+        addMessage(
+          "bot",
+          "Hello! I am Mogibara-AI 🤖"
+        );
+
+      }
 
 
     } else {
 
       currentUser = null;
+
 
       document.getElementById("authScreen")
         .hidden = false;
@@ -335,67 +296,101 @@ window.showProfile = async function () {
   if (!currentUser) return;
 
 
-  const snapshot =
-    await getDoc(
-      doc(
-        db,
-        "users",
-        currentUser.uid
-      )
+  try {
+
+    const snapshot =
+      await getDoc(
+        doc(
+          db,
+          "users",
+          currentUser.uid
+        )
+      );
+
+
+    const box =
+      document.getElementById("profileInfo");
+
+
+    if (!snapshot.exists()) {
+
+      box.textContent =
+        "Profile not found.";
+
+      return;
+    }
+
+
+    const p =
+      snapshot.data();
+
+
+    box.innerHTML = `
+
+      <p>
+        <b>Name:</b>
+        ${escapeHTML(p.name || "")}
+      </p>
+
+      <p>
+        <b>Age:</b>
+        ${escapeHTML(p.age || "")}
+      </p>
+
+      <p>
+        <b>City:</b>
+        ${escapeHTML(p.city || "")}
+      </p>
+
+      <p>
+        <b>Favorite Anime:</b>
+        ${escapeHTML(p.favoriteAnime || "")}
+      </p>
+
+      <p>
+        <b>Email:</b>
+        ${escapeHTML(p.email || "")}
+      </p>
+
+    `;
+
+
+  } catch (error) {
+
+    console.error(
+      "PROFILE ERROR:",
+      error
     );
 
+    document.getElementById(
+      "profileInfo"
+    ).textContent =
+      "Could not load profile.";
 
-  const box =
-    document.getElementById("profileInfo");
-
-
-  if (!snapshot.exists()) {
-
-    box.textContent =
-      "Profile not found.";
-
-    return;
   }
-
-
-  const p =
-    snapshot.data();
-
-
-  box.innerHTML = `
-
-    <p>
-      <b>Name:</b>
-      ${escapeHTML(p.name || "")}
-    </p>
-
-    <p>
-      <b>Age:</b>
-      ${escapeHTML(p.age || "")}
-    </p>
-
-    <p>
-      <b>City:</b>
-      ${escapeHTML(p.city || "")}
-    </p>
-
-    <p>
-      <b>Favorite Anime:</b>
-      ${escapeHTML(p.favoriteAnime || "")}
-    </p>
-
-    <p>
-      <b>Email:</b>
-      ${escapeHTML(p.email || "")}
-    </p>
-
-  `;
-
 };
 
 
 /* =========================
-   FIND AI KNOWLEDGE
+   QUESTION ID
+========================= */
+
+function encodeQuestion(question) {
+
+  return btoa(
+    unescape(
+      encodeURIComponent(question)
+    )
+  )
+  .replaceAll("/", "_")
+  .replaceAll("+", "-")
+  .replaceAll("=", "");
+
+}
+
+
+/* =========================
+   FIND KNOWLEDGE
 ========================= */
 
 async function findKnowledge(question) {
@@ -403,7 +398,7 @@ async function findKnowledge(question) {
   const reference =
     doc(
       db,
-      "aiKnowledge",
+      "knowledge",
       encodeQuestion(question)
     );
 
@@ -413,19 +408,16 @@ async function findKnowledge(question) {
 
 
   if (!snapshot.exists()) {
-
     return null;
-
   }
 
 
   return snapshot.data();
-
 }
 
 
 /* =========================
-   SAVE AI KNOWLEDGE
+   SAVE KNOWLEDGE
 ========================= */
 
 async function saveKnowledge(
@@ -440,7 +432,7 @@ async function saveKnowledge(
   const reference =
     doc(
       db,
-      "aiKnowledge",
+      "knowledge",
       id
     );
 
@@ -469,12 +461,8 @@ async function saveKnowledge(
       await updateDoc(
         reference,
         {
-
           answers: answers,
-
-          updatedAt:
-            new Date().toISOString()
-
+          updatedAt: new Date().toISOString()
         }
       );
 
@@ -486,31 +474,27 @@ async function saveKnowledge(
     await setDoc(
       reference,
       {
-
         question: question,
-
         answers: [answer],
-
         used: 0,
-
-        createdAt:
-          new Date().toISOString()
-
+        createdAt: new Date().toISOString()
       }
     );
 
   }
-
 }
 
 
 /* =========================
-   CHAT
+   SEND MESSAGE
 ========================= */
 
 window.sendMessage = async function () {
 
-  if (!currentUser) return;
+  if (!currentUser) {
+    authMessage("Please login first.");
+    return;
+  }
 
 
   const input =
@@ -519,13 +503,15 @@ window.sendMessage = async function () {
     );
 
 
+  const originalQuestion =
+    input.value.trim();
+
+
+  if (!originalQuestion) return;
+
+
   const question =
-    input.value
-      .trim()
-      .toLowerCase();
-
-
-  if (!question) return;
+    originalQuestion.toLowerCase();
 
 
   input.value = "";
@@ -533,7 +519,7 @@ window.sendMessage = async function () {
 
   addMessage(
     "user",
-    question
+    originalQuestion
   );
 
 
@@ -556,7 +542,7 @@ window.sendMessage = async function () {
 
 
       await saveHistory(
-        question,
+        originalQuestion,
         reply
       );
 
@@ -610,24 +596,21 @@ window.sendMessage = async function () {
             Math.random() * list.length
           )
         ];
-
     }
 
 
     await updateDoc(
       doc(
         db,
-        "aiKnowledge",
+        "knowledge",
         encodeQuestion(question)
       ),
       {
-
         used:
           (data.used || 0) + 1,
 
         last:
           reply
-
       }
     );
 
@@ -639,14 +622,18 @@ window.sendMessage = async function () {
 
 
     await saveHistory(
-      question,
+      originalQuestion,
       reply
     );
 
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "CHAT ERROR:",
+      error
+    );
+
 
     addMessage(
       "bot",
@@ -654,28 +641,25 @@ window.sendMessage = async function () {
     );
 
   }
-
 };
 
 
 /* =========================
-   ENTER KEY
+   ENTER
 ========================= */
 
 window.handleEnter =
 function (event) {
 
   if (event.key === "Enter") {
-
     sendMessage();
-
   }
 
 };
 
 
 /* =========================
-   DISPLAY MESSAGE
+   MESSAGE
 ========================= */
 
 function addMessage(
@@ -690,7 +674,9 @@ function addMessage(
 
 
   const message =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   message.className =
@@ -718,7 +704,10 @@ function addMessage(
 
 window.teachAI = async function () {
 
-  if (!currentUser) return;
+  if (!currentUser) {
+    alert("Please login first.");
+    return;
+  }
 
 
   const question =
@@ -762,7 +751,6 @@ window.teachAI = async function () {
         "trainingRecords"
       ),
       {
-
         userId:
           currentUser.uid,
 
@@ -777,7 +765,6 @@ window.teachAI = async function () {
 
         time:
           new Date().toISOString()
-
       }
     );
 
@@ -785,7 +772,6 @@ window.teachAI = async function () {
     document.getElementById(
       "teachQuestion"
     ).value = "";
-
 
     document.getElementById(
       "teachAnswer"
@@ -799,7 +785,11 @@ window.teachAI = async function () {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "TEACH ERROR:",
+      error
+    );
+
 
     alert(
       "Training failed: " +
@@ -829,7 +819,6 @@ async function saveHistory(
       "history"
     ),
     {
-
       userId:
         currentUser.uid,
 
@@ -841,7 +830,6 @@ async function saveHistory(
 
       time:
         new Date().toISOString()
-
     }
   );
 
@@ -849,7 +837,7 @@ async function saveHistory(
 
 
 /* =========================
-   MASTER
+   MASTER PANEL
 ========================= */
 
 window.openMaster =
@@ -872,14 +860,12 @@ function () {
 };
 
 
-/*
-   IMPORTANT:
-   Real admin protection is handled
-   by Firestore Security Rules.
-*/
+/* =========================
+   MASTER MESSAGE
+========================= */
 
 window.showUsers =
-async function () {
+function () {
 
   const box =
     document.getElementById(
@@ -887,71 +873,23 @@ async function () {
     );
 
 
-  box.innerHTML =
-    "<h2>👤 Users</h2>";
+  box.innerHTML = `
 
+    <h2>👤 Users</h2>
 
-  const snapshot =
-    await getDocs(
-      collection(
-        db,
-        "users"
-      )
-    );
+    <div class="record">
+      Firebase Security Rules currently
+      allow each user to access only their
+      own profile.
+    </div>
 
-
-  snapshot.forEach(
-    userDoc => {
-
-      const data =
-        userDoc.data();
-
-
-      const div =
-        document.createElement(
-          "div"
-        );
-
-
-      div.className =
-        "record";
-
-
-      div.innerHTML = `
-
-        <b>Name:</b>
-        ${escapeHTML(data.name || "")}
-
-        <br>
-
-        <b>Email:</b>
-        ${escapeHTML(data.email || "")}
-
-        <br>
-
-        <b>City:</b>
-        ${escapeHTML(data.city || "")}
-
-        <br>
-
-        <b>Anime:</b>
-        ${escapeHTML(
-          data.favoriteAnime || ""
-        )}
-
-      `;
-
-
-      box.appendChild(div);
-
-    }
-  );
+  `;
 
 };
 
 
 window.showKnowledge =
-async function () {
+function () {
 
   const box =
     document.getElementById(
@@ -959,78 +897,21 @@ async function () {
     );
 
 
-  box.innerHTML =
-    "<h2>🧠 AI Knowledge</h2>";
+  box.innerHTML = `
 
+    <h2>🧠 Knowledge</h2>
 
-  const snapshot =
-    await getDocs(
-      collection(
-        db,
-        "aiKnowledge"
-      )
-    );
+    <div class="record">
+      Knowledge is stored online in Firebase.
+    </div>
 
-
-  snapshot.forEach(
-    knowledgeDoc => {
-
-      const data =
-        knowledgeDoc.data();
-
-
-      const div =
-        document.createElement(
-          "div"
-        );
-
-
-      div.className =
-        "record";
-
-
-      const answers =
-        Array.isArray(data.answers)
-          ? data.answers
-          : [];
-
-
-      div.innerHTML = `
-
-        <b>Question:</b>
-        ${escapeHTML(
-          data.question || ""
-        )}
-
-        <br><br>
-
-        <b>Answers:</b>
-
-        <ul>
-
-          ${answers.map(
-            answer =>
-              `<li>${escapeHTML(answer)}</li>`
-          ).join("")}
-
-        </ul>
-
-        <b>Used:</b>
-        ${data.used || 0}
-
-      `;
-
-
-      box.appendChild(div);
-
-    }
-  );
+  `;
 
 };
 
 
 window.showTraining =
-async function () {
+function () {
 
   const box =
     document.getElementById(
@@ -1038,138 +919,27 @@ async function () {
     );
 
 
-  box.innerHTML =
-    "<h2>📚 Training Records</h2>";
+  box.innerHTML = `
 
+    <h2>📚 Training</h2>
 
-  const snapshot =
-    await getDocs(
-      collection(
-        db,
-        "trainingRecords"
-      )
-    );
+    <div class="record">
+      Training records are stored securely
+      for the logged-in user.
+    </div>
 
-
-  snapshot.forEach(
-    trainingDoc => {
-
-      const data =
-        trainingDoc.data();
-
-
-      const div =
-        document.createElement(
-          "div"
-        );
-
-
-      div.className =
-        "record";
-
-
-      div.innerHTML = `
-
-        <b>User:</b>
-        ${escapeHTML(
-          data.userEmail || ""
-        )}
-
-        <br>
-
-        <b>Question:</b>
-        ${escapeHTML(
-          data.question || ""
-        )}
-
-        <br>
-
-        <b>Answer:</b>
-        ${escapeHTML(
-          data.answer || ""
-        )}
-
-        <br>
-
-        <b>Time:</b>
-        ${escapeHTML(
-          data.time || ""
-        )}
-
-      `;
-
-
-      box.appendChild(div);
-
-    }
-  );
+  `;
 
 };
 
 
-/* =========================
-   STATISTICS
-========================= */
-
 window.showStats =
-async function () {
+function () {
 
   const box =
     document.getElementById(
       "masterContent"
     );
-
-
-  box.innerHTML =
-    "<h2>📊 Statistics</h2>";
-
-
-  const users =
-    await getDocs(
-      collection(
-        db,
-        "users"
-      )
-    );
-
-
-  const knowledge =
-    await getDocs(
-      collection(
-        db,
-        "aiKnowledge"
-      )
-    );
-
-
-  const training =
-    await getDocs(
-      collection(
-        db,
-        "trainingRecords"
-      )
-    );
-
-
-  let totalAnswers = 0;
-
-
-  knowledge.forEach(
-    item => {
-
-      const answers =
-        item.data().answers;
-
-
-      if (Array.isArray(answers)) {
-
-        totalAnswers +=
-          answers.length;
-
-      }
-
-    }
-  );
 
 
   box.innerHTML = `
@@ -1177,25 +947,7 @@ async function () {
     <h2>📊 Statistics</h2>
 
     <div class="record">
-
-      <b>Users:</b>
-      ${users.size}
-
-      <br>
-
-      <b>Questions:</b>
-      ${knowledge.size}
-
-      <br>
-
-      <b>Answers:</b>
-      ${totalAnswers}
-
-      <br>
-
-      <b>Training Records:</b>
-      ${training.size}
-
+      Mogibara-AI is connected to Firebase.
     </div>
 
   `;
@@ -1204,33 +956,64 @@ async function () {
 
 
 /* =========================
-   HELPERS
+   ERROR HANDLER
 ========================= */
 
-function encodeQuestion(
-  question
-) {
+function getFriendlyError(error) {
 
-  return btoa(
-    unescape(
-      encodeURIComponent(question)
-    )
-  )
-  .replaceAll("/", "_")
-  .replaceAll("+", "-")
-  .replaceAll("=", "");
+  switch (error.code) {
 
+    case "auth/invalid-credential":
+      return "Email or password is incorrect.";
+
+    case "auth/invalid-login-credentials":
+      return "Email or password is incorrect.";
+
+    case "auth/user-not-found":
+      return "No account found with this email.";
+
+    case "auth/wrong-password":
+      return "Incorrect password.";
+
+    case "auth/invalid-email":
+      return "Invalid email address.";
+
+    case "auth/email-already-in-use":
+      return "This email already has an account.";
+
+    case "auth/weak-password":
+      return "Password must be at least 6 characters.";
+
+    case "auth/network-request-failed":
+      return "Internet connection problem.";
+
+    case "auth/too-many-requests":
+      return "Too many attempts. Try again later.";
+
+    case "auth/user-disabled":
+      return "This account has been disabled.";
+
+    case "auth/operation-not-allowed":
+      return "Email/Password login is not enabled in Firebase.";
+
+    default:
+      return error.message ||
+        "Something went wrong.";
+  }
 }
 
 
-function escapeHTML(
-  value
-) {
+/* =========================
+   HTML SECURITY
+========================= */
+
+function escapeHTML(value) {
 
   const div =
     document.createElement(
       "div"
     );
+
 
   div.textContent =
     String(value);
@@ -1238,35 +1021,4 @@ function escapeHTML(
 
   return div.innerHTML;
 
-}
-
-
-function getFriendlyError(
-  error
-) {
-
-  switch (
-    error.code
-  ) {
-
-    case "auth/email-already-in-use":
-      return "This email already has an account.";
-
-    case "auth/invalid-email":
-      return "Invalid email address.";
-
-    case "auth/invalid-credential":
-      return "Wrong email or password.";
-
-    case "auth/weak-password":
-      return "Password is too weak.";
-
-    case "auth/network-request-failed":
-      return "Internet connection problem.";
-
-    default:
-      return error.message || "Something went wrong.";
-
   }
-
-}
