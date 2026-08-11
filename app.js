@@ -19,7 +19,9 @@ import {
   setDoc,
   getDoc,
   addDoc,
-  updateDoc
+  updateDoc,
+  deleteDoc,
+  getDocs
 } from
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
@@ -43,14 +45,15 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
-const googleProvider = new GoogleAuthProvider();
+const googleProvider =
+  new GoogleAuthProvider();
 
 let currentUser = null;
 let skippedUser = false;
 
 
 /* =========================
-   TEMPORARY MASTER CONTROL
+   MASTER CONTROL
 ========================= */
 
 const MASTER_PASSWORD = "GOAT404M";
@@ -84,7 +87,9 @@ window.showLogin = function () {
 
 function authMessage(text) {
 
-  document.getElementById("authMessage").textContent = text;
+  document.getElementById(
+    "authMessage"
+  ).textContent = text;
 }
 
 
@@ -95,25 +100,39 @@ function authMessage(text) {
 window.register = async function () {
 
   const username =
-    document.getElementById("regUsername").value.trim();
+    document.getElementById(
+      "regUsername"
+    ).value.trim();
 
   const email =
-    document.getElementById("regEmail").value.trim();
+    document.getElementById(
+      "regEmail"
+    ).value.trim();
 
   const password =
-    document.getElementById("regPassword").value;
+    document.getElementById(
+      "regPassword"
+    ).value;
 
   const age =
-    document.getElementById("regAge").value.trim();
+    document.getElementById(
+      "regAge"
+    ).value.trim();
 
   const city =
-    document.getElementById("regCity").value.trim();
+    document.getElementById(
+      "regCity"
+    ).value.trim();
 
   const gender =
-    document.getElementById("regGender").value;
+    document.getElementById(
+      "regGender"
+    ).value;
 
   const anime =
-    document.getElementById("regAnime").value.trim();
+    document.getElementById(
+      "regAnime"
+    ).value.trim();
 
 
   if (!username || !email || !password) {
@@ -138,7 +157,9 @@ window.register = async function () {
 
   try {
 
-    authMessage("Creating account...");
+    authMessage(
+      "Creating account..."
+    );
 
 
     const result =
@@ -157,19 +178,27 @@ window.register = async function () {
       ),
       {
         uid: result.user.uid,
+
         username: username,
+
         email: email,
+
         age: age,
+
         city: city,
+
         gender: gender,
+
         favoriteAnime: anime,
-        createdAt: new Date().toISOString()
+
+        createdAt:
+          new Date().toISOString()
       }
     );
 
 
     authMessage(
-      "Account created successfully!"
+      "Account created successfully! You are now logged in."
     );
 
 
@@ -191,19 +220,20 @@ window.register = async function () {
 window.login = async function () {
 
   const loginValue =
-    document.getElementById("loginUsername")
-      .value
-      .trim();
+    document.getElementById(
+      "loginUsername"
+    ).value.trim();
 
   const password =
-    document.getElementById("loginPassword")
-      .value;
+    document.getElementById(
+      "loginPassword"
+    ).value;
 
 
   if (!loginValue || !password) {
 
     authMessage(
-      "Enter username/email and password."
+      "Enter your email and password."
     );
 
     return;
@@ -212,8 +242,15 @@ window.login = async function () {
 
   try {
 
-    authMessage("Logging in...");
+    authMessage(
+      "Logging in..."
+    );
 
+
+    /*
+      Firebase Email/Password login
+      requires EMAIL, not username.
+    */
 
     await signInWithEmailAndPassword(
       auth,
@@ -270,7 +307,8 @@ window.googleLogin = async function () {
       await setDoc(
         userRef,
         {
-          uid: result.user.uid,
+          uid:
+            result.user.uid,
 
           username:
             result.user.displayName ||
@@ -320,11 +358,13 @@ window.skipLogin = function () {
   masterUnlocked = false;
 
 
-  document.getElementById("authScreen")
-    .hidden = true;
+  document.getElementById(
+    "authScreen"
+  ).hidden = true;
 
-  document.getElementById("app")
-    .hidden = false;
+  document.getElementById(
+    "app"
+  ).hidden = false;
 
 
   addMessage(
@@ -350,23 +390,31 @@ window.logout = async function () {
 
     masterUnlocked = false;
 
+
     if (skippedUser) {
 
       skippedUser = false;
 
       currentUser = null;
 
-      document.getElementById("authScreen")
-        .hidden = false;
 
-      document.getElementById("app")
-        .hidden = true;
+      document.getElementById(
+        "authScreen"
+      ).hidden = false;
 
-      document.getElementById("loginBox")
-        .hidden = false;
+      document.getElementById(
+        "app"
+      ).hidden = true;
 
-      document.getElementById("registerBox")
-        .hidden = true;
+
+      document.getElementById(
+        "loginBox"
+      ).hidden = false;
+
+      document.getElementById(
+        "registerBox"
+      ).hidden = true;
+
 
       authMessage("");
 
@@ -406,18 +454,22 @@ onAuthStateChanged(
       masterUnlocked = false;
 
 
-      document.getElementById("authScreen")
-        .hidden = true;
+      document.getElementById(
+        "authScreen"
+      ).hidden = true;
 
-      document.getElementById("app")
-        .hidden = false;
+      document.getElementById(
+        "app"
+      ).hidden = false;
 
 
       await showProfile();
 
 
       const messages =
-        document.getElementById("messages");
+        document.getElementById(
+          "messages"
+        );
 
 
       if (messages.children.length === 0) {
@@ -436,18 +488,22 @@ onAuthStateChanged(
       masterUnlocked = false;
 
 
-      document.getElementById("authScreen")
-        .hidden = false;
+      document.getElementById(
+        "authScreen"
+      ).hidden = false;
 
-      document.getElementById("app")
-        .hidden = true;
+      document.getElementById(
+        "app"
+      ).hidden = true;
 
 
-      document.getElementById("loginBox")
-        .hidden = false;
+      document.getElementById(
+        "loginBox"
+      ).hidden = false;
 
-      document.getElementById("registerBox")
-        .hidden = true;
+      document.getElementById(
+        "registerBox"
+      ).hidden = true;
 
 
       authMessage("");
@@ -465,8 +521,9 @@ window.showProfile = async function () {
 
   if (!currentUser) {
 
-    document.getElementById("profileInfo")
-      .textContent = "Guest mode";
+    document.getElementById(
+      "profileInfo"
+    ).textContent = "Guest mode";
 
     return;
   }
@@ -505,23 +562,37 @@ window.showProfile = async function () {
 
     box.innerHTML = `
 
-      <p><b>Username:</b>
-      ${escapeHTML(p.username || "")}</p>
+      <p>
+        <b>Username:</b>
+        ${escapeHTML(p.username || "")}
+      </p>
 
-      <p><b>Email:</b>
-      ${escapeHTML(p.email || "")}</p>
+      <p>
+        <b>Email:</b>
+        ${escapeHTML(p.email || "")}
+      </p>
 
-      <p><b>Age:</b>
-      ${escapeHTML(p.age || "")}</p>
+      <p>
+        <b>Age:</b>
+        ${escapeHTML(p.age || "")}
+      </p>
 
-      <p><b>City:</b>
-      ${escapeHTML(p.city || "")}</p>
+      <p>
+        <b>City:</b>
+        ${escapeHTML(p.city || "")}
+      </p>
 
-      <p><b>Gender:</b>
-      ${escapeHTML(p.gender || "")}</p>
+      <p>
+        <b>Gender:</b>
+        ${escapeHTML(p.gender || "")}
+      </p>
 
-      <p><b>Favorite Anime:</b>
-      ${escapeHTML(p.favoriteAnime || "")}</p>
+      <p>
+        <b>Favorite Anime:</b>
+        ${escapeHTML(
+          p.favoriteAnime || ""
+        )}
+      </p>
 
     `;
 
@@ -594,6 +665,8 @@ window.sendMessage = async function () {
         "Master Control is already unlocked. 🔓"
       );
 
+      showMasterMenu();
+
       return;
     }
 
@@ -635,11 +708,7 @@ window.sendMessage = async function () {
     );
 
 
-    addMessage(
-      "bot",
-      "Memory access is now available. 🧠"
-    );
-
+    showMasterMenu();
 
     return;
   }
@@ -666,18 +735,14 @@ window.sendMessage = async function () {
 
       addMessage(
         "bot",
-        "🔒 Memory is protected. Use /master and enter the Master password first."
+        "🔒 Memory is protected. Use /master first."
       );
 
       return;
     }
 
 
-    addMessage(
-      "bot",
-      "🧠 Memory access granted. Master Control is unlocked."
-    );
-
+    showMemory();
 
     return;
   }
@@ -739,7 +804,7 @@ window.sendMessage = async function () {
     }
 
 
-    let reply =
+    const reply =
       answers[
         Math.floor(
           Math.random() *
@@ -773,6 +838,343 @@ window.sendMessage = async function () {
     );
   }
 };
+
+
+/* =========================
+   MASTER MENU
+========================= */
+
+function showMasterMenu() {
+
+  if (!masterUnlocked) {
+
+    addMessage(
+      "bot",
+      "Master Control is locked. 🔒"
+    );
+
+    return;
+  }
+
+
+  addMessage(
+    "bot",
+`========== MASTER CONTROL ==========
+
+1. Show Memory
+2. Search Memory
+3. Rewrite Answer
+4. Delete Answer
+5. Delete Question
+6. Add Answer
+7. Statistics
+8. Advanced Stats
+9. Export Memory
+10. Import Memory
+11. Clear Memory
+12. User Profile
+13. Exit
+14. Stop Master Control
+
+====================================
+
+Type /mastermenu to open the menu again.
+Type /memory to view memory.
+Type /stopmaster to lock Master Control.`
+  );
+}
+
+
+/* =========================
+   MASTER COMMANDS
+========================= */
+
+async function handleMasterCommand(
+  command
+) {
+
+  if (!masterUnlocked) {
+
+    addMessage(
+      "bot",
+      "🔒 Master Control is locked."
+    );
+
+    return;
+  }
+
+
+  if (command === "/mastermenu") {
+
+    showMasterMenu();
+
+    return;
+  }
+
+
+  if (command === "/stopmaster") {
+
+    masterUnlocked = false;
+
+    addMessage(
+      "bot",
+      "🛑 Master Control stopped and locked."
+    );
+
+    return;
+  }
+
+
+  if (command === "/showmemory") {
+
+    await showMemory();
+
+    return;
+  }
+
+
+  if (command === "/stats") {
+
+    await showStats();
+
+    return;
+  }
+}
+
+
+/* =========================
+   MASTER COMMAND ROUTER
+========================= */
+
+const originalSendMessage =
+  window.sendMessage;
+
+window.sendMessage =
+async function () {
+
+  const input =
+    document.getElementById(
+      "messageInput"
+    );
+
+
+  const original =
+    input.value.trim();
+
+
+  if (
+    masterUnlocked &&
+    original.toLowerCase() !== "/master"
+  ) {
+
+    const command =
+      original.toLowerCase();
+
+
+    if (
+      command === "/mastermenu" ||
+      command === "/stopmaster" ||
+      command === "/showmemory" ||
+      command === "/stats"
+    ) {
+
+      input.value = "";
+
+      addMessage(
+        "user",
+        original
+      );
+
+      await handleMasterCommand(
+        command
+      );
+
+      return;
+    }
+  }
+
+
+  await originalSendMessage();
+};
+
+
+/* =========================
+   SHOW MEMORY
+========================= */
+
+async function showMemory() {
+
+  if (!masterUnlocked) {
+
+    addMessage(
+      "bot",
+      "🔒 Memory is protected."
+    );
+
+    return;
+  }
+
+
+  try {
+
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "knowledge"
+        )
+      );
+
+
+    if (snapshot.empty) {
+
+      addMessage(
+        "bot",
+        "🧠 No memory found."
+      );
+
+      return;
+    }
+
+
+    let output =
+      "========== MEMORY ==========\n\n";
+
+
+    snapshot.forEach(
+      item => {
+
+        const data =
+          item.data();
+
+
+        output +=
+          "Question: " +
+          (data.question || "") +
+          "\n";
+
+
+        const answers =
+          Array.isArray(
+            data.answers
+          )
+            ? data.answers
+            : [];
+
+
+        answers.forEach(
+          (answer, index) => {
+
+            output +=
+              `${index + 1}. ${answer}\n`;
+          }
+        );
+
+
+        output += "\n";
+      }
+    );
+
+
+    output +=
+      "============================";
+
+
+    addMessage(
+      "bot",
+      output
+    );
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    addMessage(
+      "bot",
+      "Could not load memory: " +
+      error.message
+    );
+  }
+}
+
+
+/* =========================
+   STATISTICS
+========================= */
+
+async function showStats() {
+
+  if (!masterUnlocked) {
+
+    addMessage(
+      "bot",
+      "🔒 Master access required."
+    );
+
+    return;
+  }
+
+
+  try {
+
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "knowledge"
+        )
+      );
+
+
+    let questions = 0;
+    let answers = 0;
+
+
+    snapshot.forEach(
+      item => {
+
+        questions++;
+
+
+        const data =
+          item.data();
+
+
+        if (
+          Array.isArray(
+            data.answers
+          )
+        ) {
+
+          answers +=
+            data.answers.length;
+        }
+      }
+    );
+
+
+    addMessage(
+      "bot",
+`====== MEMORY STATS ======
+
+Questions : ${questions}
+Answers   : ${answers}
+
+==========================`
+    );
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    addMessage(
+      "bot",
+      "Could not load statistics."
+    );
+  }
+}
 
 
 /* =========================
@@ -1185,4 +1587,4 @@ function friendlyError(
       return error.message ||
         "Something went wrong.";
   }
-      }
+  }
