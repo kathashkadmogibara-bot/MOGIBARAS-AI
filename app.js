@@ -50,6 +50,15 @@ let skippedUser = false;
 
 
 /* =========================
+   TEMPORARY MASTER CONTROL
+========================= */
+
+const MASTER_PASSWORD = "GOAT404M";
+
+let masterUnlocked = false;
+
+
+/* =========================
    AUTH SCREEN
 ========================= */
 
@@ -308,6 +317,8 @@ window.skipLogin = function () {
 
   currentUser = null;
 
+  masterUnlocked = false;
+
 
   document.getElementById("authScreen")
     .hidden = true;
@@ -336,6 +347,8 @@ window.skipLogin = function () {
 window.logout = async function () {
 
   try {
+
+    masterUnlocked = false;
 
     if (skippedUser) {
 
@@ -390,6 +403,8 @@ onAuthStateChanged(
 
       skippedUser = false;
 
+      masterUnlocked = false;
+
 
       document.getElementById("authScreen")
         .hidden = true;
@@ -417,6 +432,8 @@ onAuthStateChanged(
     } else {
 
       currentUser = null;
+
+      masterUnlocked = false;
 
 
       document.getElementById("authScreen")
@@ -553,7 +570,9 @@ window.sendMessage = async function () {
     original.toLowerCase();
 
 
-  /* MASTER COMMAND */
+  /* =========================
+     MASTER COMMAND
+  ========================= */
 
   if (command === "/master") {
 
@@ -568,16 +587,67 @@ window.sendMessage = async function () {
     }
 
 
+    if (masterUnlocked) {
+
+      addMessage(
+        "bot",
+        "Master Control is already unlocked. 🔓"
+      );
+
+      return;
+    }
+
+
+    const password =
+      prompt(
+        "Enter Master Control password:"
+      );
+
+
+    if (password === null) {
+
+      addMessage(
+        "bot",
+        "Master Control login cancelled."
+      );
+
+      return;
+    }
+
+
+    if (password !== MASTER_PASSWORD) {
+
+      addMessage(
+        "bot",
+        "❌ Wrong Master Control password."
+      );
+
+      return;
+    }
+
+
+    masterUnlocked = true;
+
+
     addMessage(
       "bot",
-      "Master Control authentication will be connected to your Firebase Master account. 🔐"
+      "✅ Master Control unlocked. 🔓"
     );
+
+
+    addMessage(
+      "bot",
+      "Memory access is now available. 🧠"
+    );
+
 
     return;
   }
 
 
-  /* MEMORY COMMAND */
+  /* =========================
+     MEMORY COMMAND
+  ========================= */
 
   if (command === "/memory") {
 
@@ -585,7 +655,18 @@ window.sendMessage = async function () {
 
       addMessage(
         "bot",
-        "Memory access requires Master access. 🔐"
+        "Memory access requires login. 🔐"
+      );
+
+      return;
+    }
+
+
+    if (!masterUnlocked) {
+
+      addMessage(
+        "bot",
+        "🔒 Memory is protected. Use /master and enter the Master password first."
       );
 
       return;
@@ -594,14 +675,17 @@ window.sendMessage = async function () {
 
     addMessage(
       "bot",
-      "Memory is protected. Use /master first. 🧠"
+      "🧠 Memory access granted. Master Control is unlocked."
     );
+
 
     return;
   }
 
 
-  /* NORMAL CHAT */
+  /* =========================
+     NORMAL CHAT
+  ========================= */
 
   try {
 
@@ -1101,4 +1185,4 @@ function friendlyError(
       return error.message ||
         "Something went wrong.";
   }
-    }
+      }
