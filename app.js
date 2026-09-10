@@ -1,6 +1,7 @@
 import { initializeApp } from
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
+
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -11,6 +12,7 @@ import {
   onAuthStateChanged
 } from
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
 
 import {
   getFirestore,
@@ -28,26 +30,73 @@ import {
 "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
+
 /* =====================================================
    FIREBASE
 ===================================================== */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCRcdy0OcGMINNR35WX8-kvOjfP4LfqWzI",
-  authDomain: "mogibara-ai.firebaseapp.com",
-  projectId: "mogibara-ai",
-  storageBucket: "mogibara-ai.firebasestorage.app",
-  messagingSenderId: "940458573012",
-  appId: "1:940458573012:web:4c8b8e80bfab3cdd224f41",
-  measurementId: "G-ZVTHCPQMZJ"
+
+  apiKey:
+    "AIzaSyCRcdy0OcGMINNR35WX8-kvOjfP4LfqWzI",
+
+  authDomain:
+    "mogibara-ai.firebaseapp.com",
+
+  projectId:
+    "mogibara-ai",
+
+  storageBucket:
+    "mogibara-ai.firebasestorage.app",
+
+  messagingSenderId:
+    "940458573012",
+
+  appId:
+    "1:940458573012:web:4c8b8e80bfab3cdd224f41",
+
+  measurementId:
+    "G-ZVTHCPQMZJ"
+
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
 
-const auth = getAuth(firebaseApp);
-const db = getFirestore(firebaseApp);
+const firebaseApp =
+  initializeApp(firebaseConfig);
 
-const googleProvider = new GoogleAuthProvider();
+
+const auth =
+  getAuth(firebaseApp);
+
+
+const db =
+  getFirestore(firebaseApp);
+
+
+const googleProvider =
+  new GoogleAuthProvider();
+
+
+
+/* =====================================================
+   GEMINI BACKEND
+===================================================== */
+
+/*
+   IMPORTANT:
+
+   This is NOT the Gemini API key.
+
+   This is the URL of your Firebase Cloud Function.
+
+   After deployment it should look like:
+
+   https://us-central1-mogibara-ai.cloudfunctions.net/proChat
+*/
+
+const PRO_AI_URL =
+  "https://us-central1-mogibara-ai.cloudfunctions.net/proChat";
+
 
 
 /* =====================================================
@@ -55,97 +104,269 @@ const googleProvider = new GoogleAuthProvider();
 ===================================================== */
 
 let currentUser = null;
+
 let skippedUser = false;
 
 let masterAuthenticated = false;
 
 
 /*
-   TEMPORARY MASTER PASSWORD
+   Current chat mode.
 
-   IMPORTANT:
-   This is visible in client-side JavaScript.
-   Do not use this as real security.
+   normal = Firebase knowledge bot
+   pro    = Gemini AI
 */
-const MASTER_PASSWORD = "GOAT404M";
+
+let chatMode = "normal";
+
+
+/*
+   PRO conversation memory.
+
+   This stays in the browser and is sent
+   to the backend when the user uses PRO mode.
+*/
+
+let proHistory = [];
+
+
+
+/* =====================================================
+   MASTER PASSWORD
+===================================================== */
+
+/*
+   WARNING:
+
+   This password is visible in client-side JavaScript.
+
+   It is NOT real security.
+
+   For real admin security, move this to
+   a backend system later.
+*/
+
+const MASTER_PASSWORD =
+  "GOAT404M";
+
+
+
+/* =====================================================
+   CHAT MODE
+===================================================== */
+
+window.setChatMode =
+function(mode) {
+
+  if (
+    mode !== "normal" &&
+    mode !== "pro"
+  ) {
+
+    return;
+  }
+
+
+  /*
+     PRO requires login.
+  */
+
+  if (
+    mode === "pro" &&
+    !currentUser
+  ) {
+
+    addMessage(
+      "bot",
+      "⚡ PRO AI requires login. Please login first."
+    );
+
+    return;
+  }
+
+
+  chatMode =
+    mode;
+
+
+  const normalButton =
+    document.getElementById(
+      "normalModeBtn"
+    );
+
+
+  const proButton =
+    document.getElementById(
+      "proModeBtn"
+    );
+
+
+  const status =
+    document.getElementById(
+      "modeStatus"
+    );
+
+
+  normalButton.classList.toggle(
+    "active",
+    mode === "normal"
+  );
+
+
+  proButton.classList.toggle(
+    "active",
+    mode === "pro"
+  );
+
+
+  if (mode === "normal") {
+
+    status.textContent =
+      "🤖 Normal Mode — Firebase knowledge";
+
+    addMessage(
+      "bot",
+      "🤖 Normal Mode activated."
+    );
+
+  } else {
+
+    status.textContent =
+      "⚡ PRO AI Mode — Gemini";
+
+    addMessage(
+      "bot",
+      "⚡ PRO AI activated. You are now chatting with AI."
+    );
+  }
+
+};
+
 
 
 /* =====================================================
    AUTH SCREEN
 ===================================================== */
 
-window.showRegister = function () {
+window.showRegister =
+function() {
 
-  document.getElementById("loginBox").hidden = true;
+  document.getElementById(
+    "loginBox"
+  ).hidden = true;
 
-  document.getElementById("registerBox").hidden = false;
+
+  document.getElementById(
+    "registerBox"
+  ).hidden = false;
+
+
+  authMessage("");
+};
+
+
+
+window.showLogin =
+function() {
+
+  document.getElementById(
+    "loginBox"
+  ).hidden = false;
+
+
+  document.getElementById(
+    "registerBox"
+  ).hidden = true;
+
 
   authMessage("");
 };
 
-
-window.showLogin = function () {
-
-  document.getElementById("loginBox").hidden = false;
-
-  document.getElementById("registerBox").hidden = true;
-
-  authMessage("");
-};
 
 
 function authMessage(text) {
 
   const box =
-    document.getElementById("authMessage");
+    document.getElementById(
+      "authMessage"
+    );
+
 
   if (box) {
-    box.textContent = text;
+
+    box.textContent =
+      text;
   }
 }
+
 
 
 /* =====================================================
    CREATE ACCOUNT
 ===================================================== */
 
-window.register = async function () {
+window.register =
+async function() {
 
   const username =
-    document.getElementById("regUsername")
-      .value
-      .trim();
+    document.getElementById(
+      "regUsername"
+    )
+    .value
+    .trim();
+
 
   const email =
-    document.getElementById("regEmail")
-      .value
-      .trim();
+    document.getElementById(
+      "regEmail"
+    )
+    .value
+    .trim();
+
 
   const password =
-    document.getElementById("regPassword")
-      .value;
+    document.getElementById(
+      "regPassword"
+    )
+    .value;
+
 
   const age =
-    document.getElementById("regAge")
-      .value
-      .trim();
+    document.getElementById(
+      "regAge"
+    )
+    .value
+    .trim();
+
 
   const city =
-    document.getElementById("regCity")
-      .value
-      .trim();
+    document.getElementById(
+      "regCity"
+    )
+    .value
+    .trim();
+
 
   const gender =
-    document.getElementById("regGender")
-      .value;
+    document.getElementById(
+      "regGender"
+    )
+    .value;
+
 
   const anime =
-    document.getElementById("regAnime")
-      .value
-      .trim();
+    document.getElementById(
+      "regAnime"
+    )
+    .value
+    .trim();
 
 
-  if (!username || !email || !password) {
+  if (
+    !username ||
+    !email ||
+    !password
+  ) {
 
     authMessage(
       "Username, email and password are required."
@@ -155,7 +376,9 @@ window.register = async function () {
   }
 
 
-  if (password.length < 6) {
+  if (
+    password.length < 6
+  ) {
 
     authMessage(
       "Password must be at least 6 characters."
@@ -167,7 +390,9 @@ window.register = async function () {
 
   try {
 
-    authMessage("Creating account...");
+    authMessage(
+      "Creating account..."
+    );
 
 
     const result =
@@ -185,27 +410,37 @@ window.register = async function () {
         result.user.uid
       ),
       {
-        uid: result.user.uid,
 
-        username: username,
+        uid:
+          result.user.uid,
+
+        username:
+          username,
 
         usernameLower:
           username.toLowerCase(),
 
-        email: email,
+        email:
+          email,
 
-        age: age,
+        age:
+          age,
 
-        city: city,
+        city:
+          city,
 
-        gender: gender,
+        gender:
+          gender,
 
-        favoriteAnime: anime,
+        favoriteAnime:
+          anime,
 
-        provider: "email",
+        provider:
+          "email",
 
         createdAt:
           new Date().toISOString()
+
       }
     );
 
@@ -222,8 +457,11 @@ window.register = async function () {
     authMessage(
       friendlyError(error)
     );
+
   }
+
 };
+
 
 
 /* =====================================================
@@ -234,23 +472,20 @@ async function resolveLoginEmail(
   loginValue
 ) {
 
-  /*
-    If the user entered an email,
-    return it directly.
-  */
+  if (
+    loginValue.includes("@")
+  ) {
 
-  if (loginValue.includes("@")) {
     return loginValue;
   }
 
 
-  /*
-    Otherwise search username.
-  */
-
   const usernameQuery =
     query(
-      collection(db, "users"),
+      collection(
+        db,
+        "users"
+      ),
       where(
         "usernameLower",
         "==",
@@ -260,10 +495,14 @@ async function resolveLoginEmail(
 
 
   const snapshot =
-    await getDocs(usernameQuery);
+    await getDocs(
+      usernameQuery
+    );
 
 
-  if (snapshot.empty) {
+  if (
+    snapshot.empty
+  ) {
 
     return null;
   }
@@ -273,15 +512,20 @@ async function resolveLoginEmail(
     snapshot.docs[0].data();
 
 
-  return profile.email || null;
+  return (
+    profile.email ||
+    null
+  );
 }
+
 
 
 /* =====================================================
    EMAIL / USERNAME LOGIN
 ===================================================== */
 
-window.login = async function () {
+window.login =
+async function() {
 
   const loginValue =
     document.getElementById(
@@ -290,6 +534,7 @@ window.login = async function () {
     .value
     .trim();
 
+
   const password =
     document.getElementById(
       "loginPassword"
@@ -297,7 +542,10 @@ window.login = async function () {
     .value;
 
 
-  if (!loginValue || !password) {
+  if (
+    !loginValue ||
+    !password
+  ) {
 
     authMessage(
       "Enter username/email and password."
@@ -337,9 +585,7 @@ window.login = async function () {
     );
 
 
-    authMessage(
-      ""
-    );
+    authMessage("");
 
 
   } catch (error) {
@@ -349,15 +595,19 @@ window.login = async function () {
     authMessage(
       friendlyError(error)
     );
+
   }
+
 };
+
 
 
 /* =====================================================
    GOOGLE LOGIN
 ===================================================== */
 
-window.googleLogin = async function () {
+window.googleLogin =
+async function() {
 
   try {
 
@@ -382,14 +632,19 @@ window.googleLogin = async function () {
 
 
     const profile =
-      await getDoc(userRef);
+      await getDoc(
+        userRef
+      );
 
 
-    if (!profile.exists()) {
+    if (
+      !profile.exists()
+    ) {
 
       await setDoc(
         userRef,
         {
+
           uid:
             result.user.uid,
 
@@ -404,22 +659,30 @@ window.googleLogin = async function () {
             ).toLowerCase(),
 
           email:
-            result.user.email || "",
+            result.user.email ||
+            "",
 
-          age: "",
+          age:
+            "",
 
-          city: "",
+          city:
+            "",
 
-          gender: "",
+          gender:
+            "",
 
-          favoriteAnime: "",
+          favoriteAnime:
+            "",
 
-          provider: "google",
+          provider:
+            "google",
 
           createdAt:
             new Date().toISOString()
+
         }
       );
+
     }
 
 
@@ -430,21 +693,34 @@ window.googleLogin = async function () {
     authMessage(
       friendlyError(error)
     );
+
   }
+
 };
+
 
 
 /* =====================================================
    SKIP LOGIN
 ===================================================== */
 
-window.skipLogin = function () {
+window.skipLogin =
+function() {
 
-  skippedUser = true;
+  skippedUser =
+    true;
 
-  currentUser = null;
 
-  masterAuthenticated = false;
+  currentUser =
+    null;
+
+
+  masterAuthenticated =
+    false;
+
+
+  chatMode =
+    "normal";
 
 
   document.getElementById(
@@ -465,27 +741,41 @@ window.skipLogin = function () {
 
   addMessage(
     "bot",
-    "Login anytime to save your profile and training."
+    "Login anytime to save your profile and use PRO AI."
   );
+
 };
+
 
 
 /* =====================================================
    LOGOUT
 ===================================================== */
 
-window.logout = async function () {
+window.logout =
+async function() {
 
   try {
 
-    masterAuthenticated = false;
+    masterAuthenticated =
+      false;
+
+
+    proHistory =
+      [];
+
+
+    chatMode =
+      "normal";
 
 
     if (skippedUser) {
 
-      skippedUser = false;
+      skippedUser =
+        false;
 
-      currentUser = null;
+      currentUser =
+        null;
 
 
       document.getElementById(
@@ -525,8 +815,11 @@ window.logout = async function () {
       "Logout failed: " +
       error.message
     );
+
   }
+
 };
+
 
 
 /* =====================================================
@@ -539,11 +832,20 @@ onAuthStateChanged(
 
     if (user) {
 
-      currentUser = user;
+      currentUser =
+        user;
 
-      skippedUser = false;
+      skippedUser =
+        false;
 
-      masterAuthenticated = false;
+      masterAuthenticated =
+        false;
+
+      chatMode =
+        "normal";
+
+      proHistory =
+        [];
 
 
       document.getElementById(
@@ -573,14 +875,17 @@ onAuthStateChanged(
           "bot",
           "Hello! I am Mogibara-AI 🤖"
         );
+
       }
 
 
     } else {
 
-      currentUser = null;
+      currentUser =
+        null;
 
-      masterAuthenticated = false;
+      masterAuthenticated =
+        false;
 
 
       document.getElementById(
@@ -604,17 +909,20 @@ onAuthStateChanged(
 
 
       authMessage("");
+
     }
 
   }
 );
 
 
+
 /* =====================================================
    PROFILE
 ===================================================== */
 
-window.showProfile = async function () {
+window.showProfile =
+async function() {
 
   const box =
     document.getElementById(
@@ -643,7 +951,9 @@ window.showProfile = async function () {
       );
 
 
-    if (!snapshot.exists()) {
+    if (
+      !snapshot.exists()
+    ) {
 
       box.textContent =
         "Profile not found.";
@@ -699,15 +1009,19 @@ window.showProfile = async function () {
 
     box.textContent =
       "Could not load profile.";
+
   }
+
 };
+
 
 
 /* =====================================================
    CHAT
 ===================================================== */
 
-window.sendMessage = async function () {
+window.sendMessage =
+async function() {
 
   const input =
     document.getElementById(
@@ -720,6 +1034,7 @@ window.sendMessage = async function () {
 
 
   if (!original) {
+
     return;
   }
 
@@ -733,15 +1048,42 @@ window.sendMessage = async function () {
   );
 
 
+  /*
+     ==============================
+     PRO MODE
+     ==============================
+  */
+
+  if (
+    chatMode === "pro"
+  ) {
+
+    await sendProMessage(
+      original
+    );
+
+    return;
+  }
+
+
+  /*
+     ==============================
+     NORMAL MODE
+     ==============================
+  */
+
   const command =
-    original.toLowerCase().trim();
+    original
+      .toLowerCase()
+      .trim();
 
 
-  /* ===================================================
-     MASTER COMMAND
-  =================================================== */
 
-  if (command === "/master") {
+  /* MASTER */
+
+  if (
+    command === "/master"
+  ) {
 
     await openMasterControl();
 
@@ -749,11 +1091,12 @@ window.sendMessage = async function () {
   }
 
 
-  /* ===================================================
-     MEMORY COMMAND
-  =================================================== */
 
-  if (command === "/memory") {
+  /* MEMORY */
+
+  if (
+    command === "/memory"
+  ) {
 
     if (!currentUser) {
 
@@ -766,14 +1109,19 @@ window.sendMessage = async function () {
     }
 
 
-    if (!masterAuthenticated) {
+    if (
+      !masterAuthenticated
+    ) {
 
       const success =
         await masterLogin();
 
+
       if (!success) {
+
         return;
       }
+
     }
 
 
@@ -783,9 +1131,10 @@ window.sendMessage = async function () {
   }
 
 
-  /* ===================================================
+
+  /*
      NORMAL CHAT
-  =================================================== */
+  */
 
   try {
 
@@ -813,6 +1162,7 @@ window.sendMessage = async function () {
           original,
           reply
         );
+
       }
 
 
@@ -828,7 +1178,9 @@ window.sendMessage = async function () {
         : [];
 
 
-    if (answers.length === 0) {
+    if (
+      answers.length === 0
+    ) {
 
       addMessage(
         "bot",
@@ -839,7 +1191,7 @@ window.sendMessage = async function () {
     }
 
 
-    let reply =
+    const reply =
       answers[
         Math.floor(
           Math.random() *
@@ -860,6 +1212,7 @@ window.sendMessage = async function () {
         original,
         reply
       );
+
     }
 
 
@@ -867,12 +1220,247 @@ window.sendMessage = async function () {
 
     console.error(error);
 
+
     addMessage(
       "bot",
       "Something went wrong."
     );
+
   }
+
 };
+
+
+
+/* =====================================================
+   PRO AI MESSAGE
+===================================================== */
+
+async function sendProMessage(
+  userMessage
+) {
+
+  if (!currentUser) {
+
+    addMessage(
+      "bot",
+      "⚡ Please login before using PRO AI."
+    );
+
+    return;
+  }
+
+
+  /*
+     Add user message to PRO history.
+  */
+
+  proHistory.push({
+
+    role:
+      "user",
+
+    text:
+      userMessage
+
+  });
+
+
+  /*
+     Keep only the last 20 messages.
+     This prevents the browser request from
+     growing forever.
+  */
+
+  if (
+    proHistory.length > 20
+  ) {
+
+    proHistory =
+      proHistory.slice(
+        -20
+      );
+
+  }
+
+
+  const thinking =
+    addMessage(
+      "bot",
+      "⚡ Thinking..."
+    );
+
+
+  thinking.classList.add(
+    "thinking"
+  );
+
+
+  try {
+
+    /*
+       Get Firebase login token.
+
+       The backend verifies this token
+       before allowing Gemini access.
+    */
+
+    const idToken =
+      await currentUser.getIdToken();
+
+
+    const response =
+      await fetch(
+        PRO_AI_URL,
+        {
+
+          method:
+            "POST",
+
+          headers: {
+
+            "Content-Type":
+              "application/json",
+
+            "Authorization":
+              "Bearer " + idToken
+
+          },
+
+          body:
+            JSON.stringify({
+
+              message:
+                userMessage,
+
+              history:
+                proHistory
+
+            })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    /*
+       Remove "Thinking..."
+    */
+
+    thinking.remove();
+
+
+    if (
+      !response.ok
+    ) {
+
+      console.error(
+        "PRO AI error:",
+        data
+      );
+
+
+      addMessage(
+        "bot",
+        "⚠️ PRO AI error: " +
+        (
+          data.error ||
+          "Unable to contact AI."
+        )
+      );
+
+
+      /*
+         Remove failed user message
+         from conversation history.
+      */
+
+      proHistory.pop();
+
+      return;
+    }
+
+
+    const reply =
+      data.reply ||
+      "I couldn't generate a response.";
+
+
+    /*
+       Save Gemini response
+       to conversation history.
+    */
+
+    proHistory.push({
+
+      role:
+        "model",
+
+      text:
+        reply
+
+    });
+
+
+    if (
+      proHistory.length > 20
+    ) {
+
+      proHistory =
+        proHistory.slice(
+          -20
+        );
+
+    }
+
+
+    addMessage(
+      "bot",
+      reply
+    );
+
+
+    /*
+       Save PRO conversation to
+       the user's normal history too.
+    */
+
+    await saveHistory(
+      userMessage,
+      reply
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "PRO AI connection error:",
+      error
+    );
+
+
+    thinking.remove();
+
+
+    /*
+       Remove failed message.
+    */
+
+    proHistory.pop();
+
+
+    addMessage(
+      "bot",
+      "⚠️ Could not connect to PRO AI. Check your backend deployment."
+    );
+
+  }
+
+}
+
 
 
 /* =====================================================
@@ -882,13 +1470,19 @@ window.sendMessage = async function () {
 window.handleEnter =
 function(event) {
 
-  if (event.key === "Enter") {
+  if (
+    event.key === "Enter" &&
+    !event.shiftKey
+  ) {
+
+    event.preventDefault();
 
     sendMessage();
 
   }
 
 };
+
 
 
 /* =====================================================
@@ -929,7 +1523,12 @@ function addMessage(
 
   box.scrollTop =
     box.scrollHeight;
+
+
+  return message;
+
 }
+
 
 
 /* =====================================================
@@ -960,14 +1559,18 @@ async function findKnowledge(
     );
 
 
-  if (!snapshot.exists()) {
+  if (
+    !snapshot.exists()
+  ) {
 
     return null;
   }
 
 
   return snapshot.data();
+
 }
+
 
 
 /* =====================================================
@@ -975,7 +1578,7 @@ async function findKnowledge(
 ===================================================== */
 
 window.teachAI =
-async function () {
+async function() {
 
   if (!currentUser) {
 
@@ -1004,7 +1607,10 @@ async function () {
     .trim();
 
 
-  if (!question || !answer) {
+  if (
+    !question ||
+    !answer
+  ) {
 
     alert(
       "Enter both question and answer."
@@ -1028,6 +1634,7 @@ async function () {
         "trainingRecords"
       ),
       {
+
         userId:
           currentUser.uid,
 
@@ -1042,6 +1649,7 @@ async function () {
 
         time:
           new Date().toISOString()
+
       }
     );
 
@@ -1065,12 +1673,16 @@ async function () {
 
     console.error(error);
 
+
     alert(
       "Training failed: " +
       error.message
     );
+
   }
+
 };
+
 
 
 /* =====================================================
@@ -1098,7 +1710,9 @@ async function saveKnowledge(
     );
 
 
-  if (snapshot.exists()) {
+  if (
+    snapshot.exists()
+  ) {
 
     const data =
       snapshot.data();
@@ -1112,21 +1726,30 @@ async function saveKnowledge(
         : [];
 
 
-    if (!answers.includes(answer)) {
+    if (
+      !answers.includes(
+        answer
+      )
+    ) {
 
-      answers.push(answer);
+      answers.push(
+        answer
+      );
 
 
       await updateDoc(
         reference,
         {
+
           answers:
             answers,
 
           updatedAt:
             new Date().toISOString()
+
         }
       );
+
     }
 
 
@@ -1135,6 +1758,7 @@ async function saveKnowledge(
     await setDoc(
       reference,
       {
+
         question:
           question,
 
@@ -1146,10 +1770,14 @@ async function saveKnowledge(
 
         createdAt:
           new Date().toISOString()
+
       }
     );
+
   }
+
 }
+
 
 
 /* =====================================================
@@ -1162,6 +1790,7 @@ async function saveHistory(
 ) {
 
   if (!currentUser) {
+
     return;
   }
 
@@ -1172,6 +1801,7 @@ async function saveHistory(
       "history"
     ),
     {
+
       userId:
         currentUser.uid,
 
@@ -1183,9 +1813,12 @@ async function saveHistory(
 
       time:
         new Date().toISOString()
+
     }
   );
+
 }
+
 
 
 /* =====================================================
@@ -1211,7 +1844,9 @@ async function masterLogin() {
     );
 
 
-  if (password === null) {
+  if (
+    password === null
+  ) {
 
     addMessage(
       "bot",
@@ -1235,7 +1870,8 @@ async function masterLogin() {
   }
 
 
-  masterAuthenticated = true;
+  masterAuthenticated =
+    true;
 
 
   addMessage(
@@ -1245,7 +1881,9 @@ async function masterLogin() {
 
 
   return true;
+
 }
+
 
 
 /* =====================================================
@@ -1265,19 +1903,26 @@ async function openMasterControl() {
   }
 
 
-  if (!masterAuthenticated) {
+  if (
+    !masterAuthenticated
+  ) {
 
     const success =
       await masterLogin();
 
+
     if (!success) {
+
       return;
     }
+
   }
 
 
   await masterMenu();
+
 }
+
 
 
 /* =====================================================
@@ -1286,7 +1931,9 @@ async function openMasterControl() {
 
 async function masterMenu() {
 
-  while (masterAuthenticated) {
+  while (
+    masterAuthenticated
+  ) {
 
     const choice =
       prompt(
@@ -1315,14 +1962,19 @@ Enter menu number:
       );
 
 
-    if (choice === null) {
+    if (
+      choice === null
+    ) {
 
-      masterAuthenticated = false;
+      masterAuthenticated =
+        false;
+
 
       addMessage(
         "bot",
         "🛑 Master Control stopped."
       );
+
 
       break;
     }
@@ -1422,7 +2074,9 @@ Enter menu number:
 
       case "13":
 
-        masterAuthenticated = false;
+        masterAuthenticated =
+          false;
+
 
         addMessage(
           "bot",
@@ -1434,7 +2088,9 @@ Enter menu number:
 
       case "14":
 
-        masterAuthenticated = false;
+        masterAuthenticated =
+          false;
+
 
         addMessage(
           "bot",
@@ -1449,9 +2105,13 @@ Enter menu number:
         alert(
           "Invalid choice.\nPlease enter a number from 1 to 14."
         );
+
     }
+
   }
+
 }
+
 
 
 /* =====================================================
@@ -1469,7 +2129,9 @@ async function showMemory() {
     );
 
 
-  if (snapshot.empty) {
+  if (
+    snapshot.empty
+  ) {
 
     alert(
       "No memory found."
@@ -1492,7 +2154,10 @@ async function showMemory() {
 
       output +=
         "Question: " +
-        (data.question || "") +
+        (
+          data.question ||
+          ""
+        ) +
         "\n";
 
 
@@ -1505,22 +2170,30 @@ async function showMemory() {
 
 
       answers.forEach(
-        (answer, index) => {
+        (
+          answer,
+          index
+        ) => {
 
           output +=
             `${index + 1}. ${answer}\n`;
+
         }
       );
 
 
       output +=
         "Used: " +
-        (data.used || 0) +
+        (
+          data.used ||
+          0
+        ) +
         "\n";
 
 
       output +=
         "----------------------------\n";
+
     }
   );
 
@@ -1532,7 +2205,9 @@ async function showMemory() {
   alert(
     output
   );
+
 }
+
 
 
 /* =====================================================
@@ -1551,12 +2226,15 @@ async function searchMemory() {
     word === null ||
     !word.trim()
   ) {
+
     return;
   }
 
 
   const search =
-    word.toLowerCase().trim();
+    word
+      .toLowerCase()
+      .trim();
 
 
   const snapshot =
@@ -1572,7 +2250,8 @@ async function searchMemory() {
     "========== RESULTS ==========\n\n";
 
 
-  let found = false;
+  let found =
+    false;
 
 
   snapshot.forEach(
@@ -1584,15 +2263,19 @@ async function searchMemory() {
 
       const question =
         (
-          data.question || ""
+          data.question ||
+          ""
         ).toLowerCase();
 
 
       if (
-        question.includes(search)
+        question.includes(
+          search
+        )
       ) {
 
-        found = true;
+        found =
+          true;
 
 
         output +=
@@ -1610,17 +2293,23 @@ async function searchMemory() {
 
 
         answers.forEach(
-          (answer, index) => {
+          (
+            answer,
+            index
+          ) => {
 
             output +=
               `${index + 1}. ${answer}\n`;
+
           }
         );
 
 
         output +=
           "----------------------------\n";
+
       }
+
     }
   );
 
@@ -1629,6 +2318,7 @@ async function searchMemory() {
 
     output +=
       "Nothing Found.\n";
+
   }
 
 
@@ -1639,7 +2329,9 @@ async function searchMemory() {
   alert(
     output
   );
+
 }
+
 
 
 /* =====================================================
@@ -1658,6 +2350,7 @@ async function getQuestionDocument() {
     question === null ||
     !question.trim()
   ) {
+
     return null;
   }
 
@@ -1684,7 +2377,9 @@ async function getQuestionDocument() {
     );
 
 
-  if (!snapshot.exists()) {
+  if (
+    !snapshot.exists()
+  ) {
 
     alert(
       "Question not found."
@@ -1695,6 +2390,7 @@ async function getQuestionDocument() {
 
 
   return {
+
     question:
       cleanQuestion,
 
@@ -1703,8 +2399,11 @@ async function getQuestionDocument() {
 
     data:
       snapshot.data()
+
   };
+
 }
+
 
 
 /* =====================================================
@@ -1718,6 +2417,7 @@ async function rewriteAnswer() {
 
 
   if (!item) {
+
     return;
   }
 
@@ -1730,7 +2430,9 @@ async function rewriteAnswer() {
       : [];
 
 
-  if (answers.length === 0) {
+  if (
+    answers.length === 0
+  ) {
 
     alert(
       "No answers found."
@@ -1745,10 +2447,14 @@ async function rewriteAnswer() {
 
 
   answers.forEach(
-    (answer, index) => {
+    (
+      answer,
+      index
+    ) => {
 
       list +=
         `${index + 1}. ${answer}\n`;
+
     }
   );
 
@@ -1760,7 +2466,10 @@ async function rewriteAnswer() {
     );
 
 
-  if (number === null) {
+  if (
+    number === null
+  ) {
+
     return;
   }
 
@@ -1794,6 +2503,7 @@ async function rewriteAnswer() {
     newAnswer === null ||
     !newAnswer.trim()
   ) {
+
     return;
   }
 
@@ -1805,11 +2515,13 @@ async function rewriteAnswer() {
   await updateDoc(
     item.reference,
     {
+
       answers:
         answers,
 
       updatedAt:
         new Date().toISOString()
+
     }
   );
 
@@ -1817,7 +2529,9 @@ async function rewriteAnswer() {
   alert(
     "✅ Answer updated successfully."
   );
+
 }
+
 
 
 /* =====================================================
@@ -1831,6 +2545,7 @@ async function deleteAnswer() {
 
 
   if (!item) {
+
     return;
   }
 
@@ -1843,7 +2558,9 @@ async function deleteAnswer() {
       : [];
 
 
-  if (answers.length === 0) {
+  if (
+    answers.length === 0
+  ) {
 
     alert(
       "No answers found."
@@ -1858,10 +2575,14 @@ async function deleteAnswer() {
 
 
   answers.forEach(
-    (answer, index) => {
+    (
+      answer,
+      index
+    ) => {
 
       list +=
         `${index + 1}. ${answer}\n`;
+
     }
   );
 
@@ -1873,7 +2594,10 @@ async function deleteAnswer() {
     );
 
 
-  if (number === null) {
+  if (
+    number === null
+  ) {
+
     return;
   }
 
@@ -1903,7 +2627,10 @@ async function deleteAnswer() {
     );
 
 
-  if (!confirmDelete) {
+  if (
+    !confirmDelete
+  ) {
+
     return;
   }
 
@@ -1914,7 +2641,9 @@ async function deleteAnswer() {
   );
 
 
-  if (answers.length === 0) {
+  if (
+    answers.length === 0
+  ) {
 
     await deleteDoc(
       item.reference
@@ -1925,20 +2654,25 @@ async function deleteAnswer() {
     await updateDoc(
       item.reference,
       {
+
         answers:
           answers,
 
         updatedAt:
           new Date().toISOString()
+
       }
     );
+
   }
 
 
   alert(
     "✅ Answer deleted successfully."
   );
+
 }
+
 
 
 /* =====================================================
@@ -1952,6 +2686,7 @@ async function deleteQuestion() {
 
 
   if (!item) {
+
     return;
   }
 
@@ -1963,7 +2698,10 @@ async function deleteQuestion() {
     );
 
 
-  if (!confirmDelete) {
+  if (
+    !confirmDelete
+  ) {
+
     return;
   }
 
@@ -1976,7 +2714,9 @@ async function deleteQuestion() {
   alert(
     "✅ Question deleted successfully."
   );
+
 }
+
 
 
 /* =====================================================
@@ -1990,6 +2730,7 @@ async function addAnswer() {
 
 
   if (!item) {
+
     return;
   }
 
@@ -2004,6 +2745,7 @@ async function addAnswer() {
     answer === null ||
     !answer.trim()
   ) {
+
     return;
   }
 
@@ -2038,11 +2780,13 @@ async function addAnswer() {
   await updateDoc(
     item.reference,
     {
+
       answers:
         answers,
 
       updatedAt:
         new Date().toISOString()
+
     }
   );
 
@@ -2050,7 +2794,9 @@ async function addAnswer() {
   alert(
     "✅ Answer added successfully."
   );
+
 }
+
 
 
 /* =====================================================
@@ -2068,9 +2814,14 @@ async function memoryStats() {
     );
 
 
-  let totalQuestions = 0;
-  let totalAnswers = 0;
-  let totalUsed = 0;
+  let totalQuestions =
+    0;
+
+  let totalAnswers =
+    0;
+
+  let totalUsed =
+    0;
 
 
   snapshot.forEach(
@@ -2099,6 +2850,7 @@ async function memoryStats() {
         Number(
           data.used || 0
         );
+
     }
   );
 
@@ -2114,7 +2866,9 @@ Times Used: ${totalUsed}
 ==========================
 `
   );
+
 }
+
 
 
 /* =====================================================
@@ -2141,10 +2895,17 @@ async function advancedStats() {
     );
 
 
-  let questions = 0;
-  let answers = 0;
-  let used = 0;
-  let longest = "";
+  let questions =
+    0;
+
+  let answers =
+    0;
+
+  let used =
+    0;
+
+  let longest =
+    "";
 
 
   memorySnapshot.forEach(
@@ -2187,6 +2948,7 @@ async function advancedStats() {
         longest =
           question;
       }
+
     }
   );
 
@@ -2206,7 +2968,9 @@ ${longest || "None"}
 ============================
 `
   );
+
 }
+
 
 
 /* =====================================================
@@ -2224,7 +2988,8 @@ async function exportMemory() {
     );
 
 
-  const memoryData = {};
+  const memoryData =
+    {};
 
 
   snapshot.forEach(
@@ -2232,6 +2997,7 @@ async function exportMemory() {
 
       memoryData[item.id] =
         item.data();
+
     }
   );
 
@@ -2285,7 +3051,9 @@ async function exportMemory() {
   alert(
     "✅ Memory exported."
   );
+
 }
+
 
 
 /* =====================================================
@@ -2316,6 +3084,7 @@ async function importMemory() {
 
 
       if (!file) {
+
         return;
       }
 
@@ -2327,10 +3096,13 @@ async function importMemory() {
 
 
         const imported =
-          JSON.parse(text);
+          JSON.parse(
+            text
+          );
 
 
-        let count = 0;
+        let count =
+          0;
 
 
         for (
@@ -2345,6 +3117,7 @@ async function importMemory() {
             !data ||
             typeof data !== "object"
           ) {
+
             continue;
           }
 
@@ -2360,6 +3133,7 @@ async function importMemory() {
 
 
           count++;
+
         }
 
 
@@ -2372,15 +3146,20 @@ async function importMemory() {
 
         console.error(error);
 
+
         alert(
           "Import failed. Invalid JSON file."
         );
+
       }
+
     };
 
 
   input.click();
+
 }
+
 
 
 /* =====================================================
@@ -2395,19 +3174,23 @@ async function clearMemory() {
     );
 
 
-  if (!firstConfirm) {
+  if (
+    !firstConfirm
+  ) {
+
     return;
   }
 
 
   const secondConfirm =
     prompt(
-      'Type DELETE to confirm:'
+      "Type DELETE to confirm:"
     );
 
 
   if (
-    secondConfirm !== "DELETE"
+    secondConfirm !==
+    "DELETE"
   ) {
 
     alert(
@@ -2427,7 +3210,8 @@ async function clearMemory() {
     );
 
 
-  let count = 0;
+  let count =
+    0;
 
 
   for (
@@ -2438,14 +3222,18 @@ async function clearMemory() {
       item.ref
     );
 
+
     count++;
+
   }
 
 
   alert(
     `✅ All memory deleted.\nRecords: ${count}`
   );
+
 }
+
 
 
 /* =====================================================
@@ -2475,7 +3263,9 @@ function encodeQuestion(
     "=",
     ""
   );
+
 }
+
 
 
 /* =====================================================
@@ -2497,7 +3287,9 @@ function escapeHTML(
 
 
   return div.innerHTML;
+
 }
+
 
 
 /* =====================================================
@@ -2508,45 +3300,72 @@ function friendlyError(
   error
 ) {
 
-  switch (error.code) {
+  switch (
+    error.code
+  ) {
 
     case "auth/invalid-credential":
+
       return "Wrong email or password.";
+
 
     case "auth/invalid-login-credentials":
+
       return "Wrong email or password.";
 
+
     case "auth/user-not-found":
+
       return "Account not found.";
 
+
     case "auth/wrong-password":
+
       return "Wrong password.";
 
+
     case "auth/email-already-in-use":
+
       return "This email already has an account.";
 
+
     case "auth/invalid-email":
+
       return "Invalid email.";
 
+
     case "auth/weak-password":
+
       return "Password must be at least 6 characters.";
 
+
     case "auth/popup-closed-by-user":
+
       return "Google login was cancelled.";
 
+
     case "auth/popup-blocked":
+
       return "Google login popup was blocked.";
 
+
     case "auth/operation-not-allowed":
+
       return "This login method is not enabled in Firebase.";
 
+
     case "auth/network-request-failed":
+
       return "Internet connection problem.";
 
+
     default:
+
       return (
         error.message ||
         "Something went wrong."
       );
+
   }
-    }
+
+        }
