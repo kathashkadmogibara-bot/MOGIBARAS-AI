@@ -1,13 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>Mogibara-AI</title>
-  <link rel="stylesheet" href="style.css">
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <style>
+
+    /* ==============================
+       CHAT MODE BUTTONS
+    ============================== */
+
+    .chat-mode {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      flex: 1;
+      min-width: 130px;
+      padding: 11px 15px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      background: #f5f5f5;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    .mode-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .mode-btn.active {
+      background: #222;
+      color: white;
+      border-color: #222;
+    }
+
+    .pro-mode-btn.active {
+      background: linear-gradient(
+        135deg,
+        #6a5cff,
+        #9b4dff
+      );
+      border-color: #6a5cff;
+    }
+
+    #modeStatus {
+      font-size: 13px;
+      opacity: 0.75;
+      margin-bottom: 10px;
+    }
+
+    .thinking {
+      opacity: 0.7;
+      font-style: italic;
+    }
+
+  </style>
+
 </head>
 
+
 <body>
+
 
 <!-- ================= AUTH ================= -->
 
@@ -16,7 +87,9 @@
   <div class="auth-card">
 
     <h1>🤖 Mogibara-AI</h1>
+
     <p>Your online AI</p>
+
 
     <!-- LOGIN -->
 
@@ -40,6 +113,7 @@
         🔐 Login
       </button>
 
+
       <button
         class="google-btn"
         onclick="googleLogin()"
@@ -47,12 +121,14 @@
         🔵 Continue with Google
       </button>
 
+
       <button
         class="secondary"
         onclick="showRegister()"
       >
         🆕 Create Account
       </button>
+
 
       <button
         class="secondary"
@@ -70,11 +146,13 @@
 
       <h2>Create Account</h2>
 
+
       <input
         id="regUsername"
         type="text"
         placeholder="Username"
       >
+
 
       <input
         id="regEmail"
@@ -82,11 +160,13 @@
         placeholder="Email"
       >
 
+
       <input
         id="regPassword"
         type="password"
         placeholder="Password"
       >
+
 
       <input
         id="regAge"
@@ -94,21 +174,38 @@
         placeholder="Age"
       >
 
+
       <input
         id="regCity"
         type="text"
         placeholder="City"
       >
 
+
       <select id="regGender">
-        <option value="">Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
+
+        <option value="">
+          Gender
+        </option>
+
+        <option value="Male">
+          Male
+        </option>
+
+        <option value="Female">
+          Female
+        </option>
+
+        <option value="Other">
+          Other
+        </option>
+
         <option value="Prefer not to say">
           Prefer not to say
         </option>
+
       </select>
+
 
       <input
         id="regAnime"
@@ -116,9 +213,11 @@
         placeholder="Favorite Anime"
       >
 
+
       <button onclick="register()">
         🆕 Create Account
       </button>
+
 
       <button
         class="google-btn"
@@ -126,6 +225,7 @@
       >
         🔵 Sign up with Google
       </button>
+
 
       <button
         class="secondary"
@@ -136,6 +236,7 @@
 
     </div>
 
+
     <p id="authMessage"></p>
 
   </div>
@@ -143,13 +244,17 @@
 </div>
 
 
+
 <!-- ================= MAIN APP ================= -->
 
 <div id="app" hidden>
 
+
   <header>
 
-    <h1>🤖 Mogibara-AI</h1>
+    <h1>
+      🤖 Mogibara-AI
+    </h1>
 
     <button onclick="logout()">
       Logout
@@ -158,13 +263,50 @@
   </header>
 
 
+
   <main>
 
-    <!-- CHAT -->
+
+    <!-- ================= CHAT ================= -->
 
     <section class="chat-section">
 
+
+      <!-- CHAT MODE -->
+
+      <div class="chat-mode">
+
+        <button
+          id="normalModeBtn"
+          class="mode-btn active"
+          onclick="setChatMode('normal')"
+        >
+          🤖 Normal
+        </button>
+
+
+        <button
+          id="proModeBtn"
+          class="mode-btn pro-mode-btn"
+          onclick="setChatMode('pro')"
+        >
+          ⚡ PRO AI
+        </button>
+
+      </div>
+
+
+      <div id="modeStatus">
+        🤖 Normal Mode — Firebase knowledge
+      </div>
+
+
+      <!-- MESSAGES -->
+
       <div id="messages"></div>
+
+
+      <!-- CHAT INPUT -->
 
       <div class="chat-input">
 
@@ -174,38 +316,51 @@
           onkeydown="handleEnter(event)"
         >
 
+
         <button onclick="sendMessage()">
           Send
         </button>
 
       </div>
 
+
     </section>
 
 
-    <!-- PROFILE -->
+
+    <!-- ================= PROFILE ================= -->
 
     <aside>
 
-      <h2>👤 Profile</h2>
+      <h2>
+        👤 Profile
+      </h2>
+
 
       <div id="profileInfo">
         Loading...
       </div>
 
+
       <hr>
 
-      <h2>🎓 Teach AI</h2>
+
+      <h2>
+        🎓 Teach AI
+      </h2>
+
 
       <input
         id="teachQuestion"
         placeholder="Question"
       >
 
+
       <textarea
         id="teachAnswer"
         placeholder="Answer"
       ></textarea>
+
 
       <button onclick="teachAI()">
         🧠 Teach Mogibara
@@ -213,12 +368,19 @@
 
     </aside>
 
+
   </main>
 
 </div>
 
 
-<script type="module" src="app.js"></script>
+
+<script
+  type="module"
+  src="app.js"
+></script>
+
 
 </body>
+
 </html>
