@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -18,7 +17,6 @@
   >
 
   <style>
-
     /* ==============================
        CHAT MODE BUTTONS
     ============================== */
@@ -59,6 +57,7 @@
         #9b4dff
       );
       border-color: #6a5cff;
+      color: white;
     }
 
     #modeStatus {
@@ -71,319 +70,298 @@
       opacity: 0.7;
       font-style: italic;
     }
-
   </style>
-
 </head>
 
 
 <body>
 
+  <!-- ================= AUTH ================= -->
 
-<!-- ================= AUTH ================= -->
+  <div id="authScreen">
 
-<div id="authScreen">
+    <div class="auth-card">
 
-  <div class="auth-card">
+      <h1>🤖 Mogibara-AI</h1>
 
-    <h1>🤖 Mogibara-AI</h1>
-
-    <p>Your online AI</p>
-
-
-    <!-- LOGIN -->
-
-    <div id="loginBox">
-
-      <h2>Login</h2>
-
-      <input
-        id="loginUsername"
-        type="text"
-        placeholder="Username or Email"
-      >
-
-      <input
-        id="loginPassword"
-        type="password"
-        placeholder="Password"
-      >
-
-      <button onclick="login()">
-        🔐 Login
-      </button>
+      <p>Your online AI</p>
 
 
-      <button
-        class="google-btn"
-        onclick="googleLogin()"
-      >
-        🔵 Continue with Google
-      </button>
+      <!-- LOGIN -->
+
+      <div id="loginBox">
+
+        <h2>Login</h2>
+
+        <input
+          id="loginUsername"
+          type="text"
+          placeholder="Username or Email"
+        >
+
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Password"
+        >
+
+        <button onclick="login()">
+          🔐 Login
+        </button>
+
+        <button
+          class="google-btn"
+          onclick="googleLogin()"
+        >
+          🔵 Continue with Google
+        </button>
+
+        <button
+          class="secondary"
+          onclick="showRegister()"
+        >
+          🆕 Create Account
+        </button>
+
+        <button
+          class="secondary"
+          onclick="skipLogin()"
+        >
+          ⏭️ Skip for now
+        </button>
+
+      </div>
 
 
-      <button
-        class="secondary"
-        onclick="showRegister()"
-      >
-        🆕 Create Account
-      </button>
+      <!-- REGISTER -->
+
+      <div id="registerBox" hidden>
+
+        <h2>Create Account</h2>
+
+        <input
+          id="regUsername"
+          type="text"
+          placeholder="Username"
+        >
+
+        <input
+          id="regEmail"
+          type="email"
+          placeholder="Email"
+        >
+
+        <input
+          id="regPassword"
+          type="password"
+          placeholder="Password"
+        >
+
+        <input
+          id="regAge"
+          type="number"
+          placeholder="Age"
+        >
+
+        <input
+          id="regCity"
+          type="text"
+          placeholder="City"
+        >
+
+        <select id="regGender">
+
+          <option value="">
+            Gender
+          </option>
+
+          <option value="Male">
+            Male
+          </option>
+
+          <option value="Female">
+            Female
+          </option>
+
+          <option value="Other">
+            Other
+          </option>
+
+          <option value="Prefer not to say">
+            Prefer not to say
+          </option>
+
+        </select>
+
+        <input
+          id="regAnime"
+          type="text"
+          placeholder="Favorite Anime"
+        >
+
+        <button onclick="register()">
+          🆕 Create Account
+        </button>
+
+        <button
+          class="google-btn"
+          onclick="googleLogin()"
+        >
+          🔵 Sign up with Google
+        </button>
+
+        <button
+          class="secondary"
+          onclick="showLogin()"
+        >
+          ← Back to Login
+        </button>
+
+      </div>
 
 
-      <button
-        class="secondary"
-        onclick="skipLogin()"
-      >
-        ⏭️ Skip for now
-      </button>
-
-    </div>
-
-
-    <!-- REGISTER -->
-
-    <div id="registerBox" hidden>
-
-      <h2>Create Account</h2>
-
-
-      <input
-        id="regUsername"
-        type="text"
-        placeholder="Username"
-      >
-
-
-      <input
-        id="regEmail"
-        type="email"
-        placeholder="Email"
-      >
-
-
-      <input
-        id="regPassword"
-        type="password"
-        placeholder="Password"
-      >
-
-
-      <input
-        id="regAge"
-        type="number"
-        placeholder="Age"
-      >
-
-
-      <input
-        id="regCity"
-        type="text"
-        placeholder="City"
-      >
-
-
-      <select id="regGender">
-
-        <option value="">
-          Gender
-        </option>
-
-        <option value="Male">
-          Male
-        </option>
-
-        <option value="Female">
-          Female
-        </option>
-
-        <option value="Other">
-          Other
-        </option>
-
-        <option value="Prefer not to say">
-          Prefer not to say
-        </option>
-
-      </select>
-
-
-      <input
-        id="regAnime"
-        type="text"
-        placeholder="Favorite Anime"
-      >
-
-
-      <button onclick="register()">
-        🆕 Create Account
-      </button>
-
-
-      <button
-        class="google-btn"
-        onclick="googleLogin()"
-      >
-        🔵 Sign up with Google
-      </button>
-
-
-      <button
-        class="secondary"
-        onclick="showLogin()"
-      >
-        ← Back to Login
-      </button>
+      <p id="authMessage"></p>
 
     </div>
-
-
-    <p id="authMessage"></p>
 
   </div>
 
-</div>
 
 
+  <!-- ================= MAIN APP ================= -->
 
-<!-- ================= MAIN APP ================= -->
+  <div id="app" hidden>
 
-<div id="app" hidden>
+    <header>
 
+      <h1>
+        🤖 Mogibara-AI
+      </h1>
 
-  <header>
-
-    <h1>
-      🤖 Mogibara-AI
-    </h1>
-
-    <button onclick="logout()">
-      Logout
-    </button>
-
-  </header>
-
-
-
-  <main>
-
-
-    <!-- ================= CHAT ================= -->
-
-    <section class="chat-section">
-
-
-      <!-- CHAT MODE -->
-
-      <div class="chat-mode">
-
-        <button
-          id="normalModeBtn"
-          class="mode-btn active"
-          onclick="setChatMode('normal')"
-        >
-          🤖 Normal
-        </button>
-
-
-        <button
-  id="proModeBtn"
-  class="mode-btn pro-mode-btn"
-  onclick="setChatMode('pro')"
->
-  ⚡ PRO AI
-        </button>
-
-      </div>
-
-
-      <div id="modeStatus">
-        🤖 Normal Mode — Firebase knowledge
-      </div>
-
-
-      <!-- MESSAGES -->
-
-      <div id="messages"></div>
-
-
-      <!-- CHAT INPUT -->
-
-      <div class="chat-input">
-
-        <input
-          id="messageInput"
-          placeholder="Talk to Mogibara-AI..."
-          onkeydown="handleEnter(event)"
-        >
-
-
-        <button onclick="sendMessage()">
-          Send
-        </button>
-
-      </div>
-
-
-    </section>
-
-
-
-    <!-- ================= PROFILE ================= -->
-
-    <aside>
-
-      <h2>
-        👤 Profile
-      </h2>
-
-
-      <div id="profileInfo">
-        Loading...
-      </div>
-
-
-      <hr>
-
-
-      <h2>
-        🎓 Teach AI
-      </h2>
-
-
-      <input
-        id="teachQuestion"
-        placeholder="Question"
-      >
-
-
-      <textarea
-        id="teachAnswer"
-        placeholder="Answer"
-      ></textarea>
-
-
-      <button onclick="teachAI()">
-        🧠 Teach Mogibara
+      <button onclick="logout()">
+        Logout
       </button>
 
-    </aside>
-
-
-  </main>
-
-</div>
+    </header>
 
 
 
-<script
-  type="module"
-  src="app.js"
-></script>
+    <main>
 
-<script
-  type="module" 
-  src="pro-ai.js">
-  </script>
+      <!-- ================= CHAT ================= -->
+
+      <section class="chat-section">
+
+        <!-- CHAT MODE -->
+
+        <div class="chat-mode">
+
+          <button
+            id="normalModeBtn"
+            class="mode-btn active"
+            onclick="setChatMode('normal')"
+          >
+            🤖 Normal
+          </button>
+
+          <button
+            id="proModeBtn"
+            class="mode-btn pro-mode-btn"
+            onclick="setChatMode('pro')"
+          >
+            ⚡ PRO AI
+          </button>
+
+        </div>
+
+
+        <div id="modeStatus">
+          🤖 Normal Mode — Firebase knowledge
+        </div>
+
+
+        <!-- MESSAGES -->
+
+        <div id="messages"></div>
+
+
+        <!-- CHAT INPUT -->
+
+        <div class="chat-input">
+
+          <input
+            id="messageInput"
+            placeholder="Talk to Mogibara-AI..."
+            onkeydown="handleEnter(event)"
+          >
+
+          <button onclick="sendMessage()">
+            Send
+          </button>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- ================= PROFILE ================= -->
+
+      <aside>
+
+        <h2>
+          👤 Profile
+        </h2>
+
+        <div id="profileInfo">
+          Loading...
+        </div>
+
+        <hr>
+
+
+        <!-- ================= TEACH AI ================= -->
+
+        <h2>
+          🎓 Teach AI
+        </h2>
+
+        <input
+          id="teachQuestion"
+          placeholder="Question"
+        >
+
+        <textarea
+          id="teachAnswer"
+          placeholder="Answer"
+        ></textarea>
+
+        <button onclick="teachAI()">
+          🧠 Teach Mogibara
+        </button>
+
+      </aside>
+
+    </main>
+
+  </div>
+
+
+
+  <!-- ================= JAVASCRIPT ================= -->
+
+  <!-- Normal Mode + Auth + Master Control -->
+  <script
+    type="module"
+    src="app.js"
+  ></script>
+
+
+  <!-- PRO Pattern AI -->
+  <script
+    type="module"
+    src="pro-ai.js"
+  ></script>
 
 </body>
 
